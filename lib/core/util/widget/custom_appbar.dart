@@ -22,23 +22,19 @@ class CustomAppBar extends StatelessWidget {
             ),
           ),
           Container(
-            width: 50,
-            height: 50,
+            width: 35,
+            height: 35,
             decoration: BoxDecoration(
               color:
-                  isDark
-                      ? AppColors.greyDark.withOpacity(0.2)
-                      : AppColors.greyLight.withOpacity(0.2),
+                  isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
               borderRadius: BorderRadius.circular(25),
             ),
-            child: Icon(
-              // ToDo: Replace with actual icon
-              Icons.home,
+            child: Image.asset(
+              'assets/images/more.png',
               color:
                   isDark
-                      ? AppColors.greyLight.withOpacity(0.85)
-                      : AppColors.greyDark.withOpacity(0.7),
-              size: 30.0,
+                      ? AppColors.greyMedium.withOpacity(0.9)
+                      : AppColors.greyDark.withOpacity(0.6),
             ),
           ),
         ],
