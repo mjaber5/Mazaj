@@ -1,0 +1,31 @@
+class RadioItem {
+  final String id;
+  final String name;
+  final String logo;
+  final String genres;
+  final String streamUrl;
+  final String country;
+  final bool featured;
+
+  RadioItem({
+    required this.id,
+    required this.name,
+    required this.logo,
+    required this.genres,
+    required this.streamUrl,
+    required this.country,
+    required this.featured,
+  });
+
+  factory RadioItem.fromJson(Map<String, dynamic> json) {
+    return RadioItem(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      logo: json['logo'] ?? '',
+      genres: json['genres'] ?? '',
+      streamUrl: json['stream_url'] ?? '',
+      country: json['country'] ?? '',
+      featured: json['featured'] ?? false,
+    );
+  }
+}
