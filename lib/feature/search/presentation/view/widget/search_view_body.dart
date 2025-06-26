@@ -130,10 +130,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                 hintText: 'Search for stations...',
                 prefixIcon: Icon(
                   Iconsax.search_normal_1,
-                  color:
-                      isDark
-                          ? AppColors.textOnsecondaryColor
-                          : AppColors.textOnPrimary,
+                  color: isDark ? AppColors.greyLight : AppColors.greyDark,
                 ),
                 suffixIcon:
                     _controller.text.isNotEmpty
@@ -146,11 +143,8 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                           },
                         )
                         : null,
-                filled: true,
-                fillColor:
-                    isDark
-                        ? const Color.fromRGBO(66, 66, 66, 0.2)
-                        : Colors.white,
+                //filled: true,
+                fillColor: isDark ? AppColors.greyDark : AppColors.greyLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide.none,
@@ -159,15 +153,13 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(
                     color:
-                        isDark
-                            ? const Color.fromRGBO(66, 66, 66, 0.2)
-                            : AppColors.greyLight,
+                        isDark ? AppColors.borderPrimary : AppColors.borderDark,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(
-                    color: AppColors.primaryColor,
+                    color: isDark ? AppColors.primaryColor : AppColors.greyDark,
                     width: 2,
                   ),
                 ),
@@ -258,6 +250,8 @@ class _SearchViewBodyState extends State<SearchViewBody> {
   }
 
   Widget _buildSearchResults(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final radioProvider = Provider.of<RadioProvider>(context);
     final cubit = context.read<AudioPlayerCubit>();
     return _searchResults.isEmpty
@@ -280,18 +274,38 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                     placeholder:
                         (context, url) => const CircularProgressIndicator(),
                     errorWidget:
-                        (context, url, error) => const Icon(Iconsax.radio),
+                        (context, url, error) => Icon(
+                          Iconsax.radio,
+                          color:
+                              isDark
+                                  ? AppColors.textOnPrimary
+                                  : AppColors.textPrimary,
+                        ),
                   ),
                 ),
                 title: Text(
                   station.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color:
+                        isDark
+                            ? AppColors.textOnPrimary
+                            : AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 subtitle: Text(
                   '${station.genres} • ${station.country}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color:
+                        isDark
+                            ? AppColors.textOnPrimary
+                            : AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 trailing: IconButton(
                   icon: Icon(
@@ -299,7 +313,11 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                         ? Iconsax.heart
                         : Iconsax.heart_add,
                     color:
-                        radioProvider.isFavorite(station) ? Colors.red : null,
+                        radioProvider.isFavorite(station)
+                            ? AppColors.accentColor
+                            : (isDark
+                                ? AppColors.textOnPrimary
+                                : AppColors.textPrimary),
                   ),
                   onPressed: () {
                     radioProvider.toggleFavorite(station);

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:mazaj_radio/core/services/api_srvices.dart';
@@ -67,7 +66,8 @@ class HotRecommendedCardItem extends StatelessWidget {
     return BlocBuilder<AudioPlayerCubit, AudioPlayerState>(
       builder: (context, state) {
         final isPlaying =
-            state.currentRadio?.id == radioItem.id && state.isPlaying;
+            state.currentRadio?.streamUrl == radioItem.streamUrl &&
+            state.isPlaying;
 
         return GestureDetector(
           onLongPress: () => _showRadioOptions(context, radio),
@@ -83,12 +83,9 @@ class HotRecommendedCardItem extends StatelessWidget {
             child: _buildCardContent(
               context,
               radio,
-              radioItem,
               isPlaying,
               cardColor,
               isDark,
-              cubit,
-              radioProvider,
             ),
           ),
         );
@@ -99,12 +96,9 @@ class HotRecommendedCardItem extends StatelessWidget {
   Widget _buildCardContent(
     BuildContext context,
     RadioStation radio,
-    RadioItem radioItem,
     bool isPlaying,
     Color cardColor,
     bool isDark,
-    AudioPlayerCubit cubit,
-    RadioProvider radioProvider,
   ) {
     return InkWell(
       borderRadius: BorderRadius.circular(20),
@@ -112,21 +106,16 @@ class HotRecommendedCardItem extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
-            colors: [cardColor.withOpacity(0.7), cardColor.withOpacity(0.4)],
+            colors: [cardColor.withOpacity(0.85), cardColor.withOpacity(0.5)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(
-            color:
-                isDark
-                    ? AppColors.greyLight.withOpacity(0.2)
-                    : AppColors.greyDark.withOpacity(0.2),
-          ),
+          border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 6),
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -139,7 +128,26 @@ class HotRecommendedCardItem extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildLogoWithFavorite(context, radio, radioProvider, isDark),
+                  CircleAvatar(
+                    radius: 42,
+                    backgroundColor: Colors.transparent,
+                    child: ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: radio.logo,
+                        fit: BoxFit.cover,
+                        width: 84,
+                        height: 84,
+                        placeholder:
+                            (_, __) => const CircularProgressIndicator(),
+                        errorWidget:
+                            (_, __, ___) => const Icon(
+                              Icons.radio,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   _buildTextInfo(radio, isDark),
                   const SizedBox(height: 12),
@@ -150,44 +158,6 @@ class HotRecommendedCardItem extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildLogoWithFavorite(
-    BuildContext context,
-    RadioStation radio,
-    RadioProvider provider,
-    bool isDark,
-  ) {
-    return Stack(
-      alignment: Alignment.topRight,
-      children: [
-        CircleAvatar(
-          radius: 42,
-          backgroundColor: Colors.transparent,
-          child: ClipOval(
-            child: CachedNetworkImage(
-              imageUrl: radio.logo,
-              fit: BoxFit.cover,
-              width: 84,
-              height: 84,
-              placeholder: (_, __) => const CircularProgressIndicator(),
-              errorWidget:
-                  (_, __, ___) =>
-                      const Icon(Icons.radio, size: 40, color: Colors.white),
-            ),
-          ),
-        ),
-        IconButton(
-          icon: Icon(
-            provider.isFavorite(radio) ? Iconsax.heart : Iconsax.heart_add,
-            size: 20,
-            color:
-                provider.isFavorite(radio) ? Colors.red : AppColors.greyLight,
-          ),
-          onPressed: () => provider.toggleFavorite(radio),
-        ),
-      ],
     );
   }
 
@@ -278,11 +248,6 @@ class HotRecommendedCardItem extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.save),
-              title: const Text("Save to Favorites"),
-              onTap: () => Navigator.pop(ctx),
-            ),
-            ListTile(
               leading: const Icon(Icons.report),
               title: const Text("Report"),
               onTap: () {
@@ -340,7 +305,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     try {
       return Color(int.parse(color.replaceFirst('#', '0xFF')));
     } catch (_) {
-      return Colors.grey;
+      return const Color(0xFF37474F); // Default professional dark-blue-grey
     }
   }
 }
