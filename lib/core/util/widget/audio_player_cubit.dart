@@ -4,12 +4,15 @@ import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'package:mazaj_radio/main.dart';
+import 'package:provider/provider.dart';
+import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
+import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
 
 part 'audio_player_state.dart';
 
 class AudioPlayerCubit extends Cubit<AudioPlayerState> {
   final AudioPlayer _audioPlayer = AudioPlayer();
-  final NotificationManager _notificationManager = NotificationManager();
+  BuildContext? _context;
 
   AudioPlayerCubit() : super(const AudioPlayerState()) {
     _init();
@@ -22,13 +25,13 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
   }
 
   AudioPlayer get audioPlayer => _audioPlayer;
+  BuildContext get context => _context!;
 
-  Future<void> playRadio(RadioItem radio) async {
+  Future<void> playRadio(RadioItem radio, BuildContext context) async {
+    _context = context;
     try {
       if (state.currentRadio?.id == radio.id && state.isPlaying) {
-        await _audioPlayer.pause();
-        await _notificationManager.cancelNotification();
-        emit(state.copyWith(isPlaying: false));
+        await pauseRadio(context);
         return;
       }
 
@@ -43,32 +46,77 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
         AudioSource.uri(Uri.parse(radio.streamUrl), tag: mediaItem),
       );
       await _audioPlayer.play();
-      await _notificationManager.showPlayingNotification(
-        radio.name,
-        radio.genres,
-      );
+      if (_context?.mounted ?? false) {
+        final notificationManager = Provider.of<NotificationManager>(
+          _context!,
+          listen: false,
+        );
+        await notificationManager.showPlayingNotification(
+          radio.name,
+          radio.genres,
+          radio.id,
+          radio.logo,
+        );
+        final radioStation = RadioStation(
+          id: radio.id,
+          name: radio.name,
+          logo: radio.logo,
+          genres: radio.genres,
+          streamUrl: radio.streamUrl,
+          country: radio.country,
+          featured: radio.featured,
+          color: radio.color,
+        );
+        Provider.of<RadioProvider>(
+          _context!,
+          listen: false,
+        ).addRecentlyPlayed(radioStation);
+        Provider.of<RadioProvider>(
+          _context!,
+          listen: false,
+        ).setLastPlayedTime(radio.id);
+      }
       emit(state.copyWith(currentRadio: radio, isPlaying: true, error: null));
     } catch (e) {
-      debugPrint('Error playing radio: $e');
       emit(state.copyWith(error: 'Error playing ${radio.name}'));
     }
   }
 
-  Future<void> pauseRadio() async {
+  Future<void> pauseRadio(BuildContext context) async {
+    _context = context;
     await _audioPlayer.pause();
-    await _notificationManager.cancelNotification();
-    emit(state.copyWith(isPlaying: false));
+    if (_context?.mounted ?? false) {
+      final notificationManager = Provider.of<NotificationManager>(
+        _context!,
+        listen: false,
+      );
+      await notificationManager.updateNotification(
+        state.currentRadio!.name,
+        state.currentRadio!.genres,
+        state.currentRadio!.id,
+        false,
+      );
+      emit(state.copyWith(isPlaying: false));
+    }
   }
 
-  Future<void> stopRadio() async {
+  Future<void> stopRadio(BuildContext context) async {
+    _context = context;
     await _audioPlayer.stop();
-    await _notificationManager.cancelNotification();
-    emit(state.copyWith(currentRadio: null, isPlaying: false, error: null));
+    if (_context?.mounted ?? false) {
+      final notificationManager = Provider.of<NotificationManager>(
+        _context!,
+        listen: false,
+      );
+      await notificationManager.cancelNotification();
+      emit(state.copyWith(currentRadio: null, isPlaying: false, error: null));
+    }
   }
 
   @override
   Future<void> close() {
     _audioPlayer.dispose();
+    _context = null;
     return super.close();
   }
 }

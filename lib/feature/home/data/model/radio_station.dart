@@ -6,6 +6,7 @@ class RadioStation {
   final String streamUrl;
   final String country;
   final bool featured;
+  final String color;
 
   RadioStation({
     required this.id,
@@ -15,17 +16,19 @@ class RadioStation {
     required this.streamUrl,
     required this.country,
     required this.featured,
+    required this.color,
   });
 
   factory RadioStation.fromJson(Map<String, dynamic> json) {
     return RadioStation(
-      id: json['id']?.toString() ?? '',
+      id: json['id'] ?? '',
       name: json['name'] ?? '',
       logo: json['logo'] ?? '',
       genres: json['genres'] ?? '',
       streamUrl: json['stream_url'] ?? '',
       country: json['country'] ?? '',
-      featured: json['featured'] as bool? ?? false,
+      featured: json['featured'] ?? false,
+      color: json['color'] ?? '#FFFFFF',
     );
   }
 
@@ -38,6 +41,7 @@ class RadioStation {
       'stream_url': streamUrl,
       'country': country,
       'featured': featured,
+      'color': color,
     };
   }
 }

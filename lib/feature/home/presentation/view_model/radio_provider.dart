@@ -1,122 +1,36 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:mazaj_radio/core/services/api_srvices.dart';
-import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 
 class RadioProvider with ChangeNotifier {
-  final ApiService _apiService = ApiService();
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  RadioStation? _currentStation;
-  bool _isPlaying = false;
-  List<RadioStation> _favorites = [];
   List<RadioStation> _recentlyPlayed = [];
+  List<RadioStation> _favorites = [];
+  static const String _recentKey = 'recently_played_radios';
+  static const String _favoriteKey = 'favorite_radios';
 
-  RadioStation? get currentStation => _currentStation;
-  bool get isPlaying => _isPlaying;
-  List<RadioStation> get favorites => _favorites;
   List<RadioStation> get recentlyPlayed => _recentlyPlayed;
+  List<RadioStation> get favorites => _favorites;
 
   RadioProvider() {
-    _loadFavorites();
     _loadRecentlyPlayed();
+    _loadFavorites();
   }
 
-  Future<void> playStation(RadioStation station) async {
-    try {
-      if (_currentStation?.id != station.id) {
-        await _audioPlayer.stop();
-        await _audioPlayer.setAudioSource(
-          AudioSource.uri(Uri.parse(station.streamUrl)),
-        );
-        await _audioPlayer.play();
-        _currentStation = station;
-        _isPlaying = true;
-        _addToRecentlyPlayed(station);
-        notifyListeners();
-      } else {
-        await togglePlayPause();
-      }
-    } catch (e) {
-      debugPrint('Error playing station: $e');
-    }
-  }
-
-  Future<void> togglePlayPause() async {
-    try {
-      if (_isPlaying) {
-        await _audioPlayer.pause();
-        _isPlaying = false;
-      } else {
-        await _audioPlayer.play();
-        _isPlaying = true;
-      }
+  Future<void> _loadRecentlyPlayed() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? radiosJson = prefs.getString(_recentKey);
+    if (radiosJson != null) {
+      final List<dynamic> radiosList = jsonDecode(radiosJson);
+      _recentlyPlayed =
+          radiosList.map((json) => RadioStation.fromJson(json)).toList();
       notifyListeners();
-    } catch (e) {
-      debugPrint('Error toggling play/pause: $e');
     }
-  }
-
-  Future<void> stop() async {
-    try {
-      await _audioPlayer.stop();
-      _isPlaying = false;
-      _currentStation = null;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Error stopping audio: $e');
-    }
-  }
-
-  Future<List<RadioStation>> fetchRadios({
-    String? country,
-    String? genres,
-    String? search,
-    bool featured = false,
-    String? id,
-    String? groupBy,
-  }) async {
-    try {
-      return await _apiService.fetchRadios(
-        country: country,
-        genres: genres,
-        search: search,
-        featured: featured,
-        id: id,
-        groupBy: groupBy,
-      );
-    } catch (e) {
-      debugPrint('Error fetching radios: $e');
-      return [];
-    }
-  }
-
-  void toggleFavorite(RadioStation station) {
-    if (_favorites.any((fav) => fav.id == station.id)) {
-      _favorites.removeWhere((fav) => fav.id == station.id);
-    } else {
-      _favorites.add(station);
-    }
-    _saveFavorites();
-    notifyListeners();
-  }
-
-  bool isFavorite(RadioStation station) {
-    return _favorites.any((fav) => fav.id == station.id);
-  }
-
-  void _addToRecentlyPlayed(RadioStation station) {
-    _recentlyPlayed.removeWhere((s) => s.id == station.id);
-    _recentlyPlayed.insert(0, station);
-    if (_recentlyPlayed.length > 10) _recentlyPlayed.removeLast();
-    _saveRecentlyPlayed();
   }
 
   Future<void> _loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? favoritesJson = prefs.getString('favorites');
+    final String? favoritesJson = prefs.getString(_favoriteKey);
     if (favoritesJson != null) {
       final List<dynamic> favoritesList = jsonDecode(favoritesJson);
       _favorites =
@@ -125,36 +39,64 @@ class RadioProvider with ChangeNotifier {
     }
   }
 
-  Future<void> _saveFavorites() async {
+  Future<void> addRecentlyPlayed(RadioStation radio) async {
     final prefs = await SharedPreferences.getInstance();
-    final favoritesJson = jsonEncode(
-      _favorites.map((fav) => fav.toJson()).toList(),
+    _recentlyPlayed.removeWhere((r) => r.id == radio.id); // Remove duplicates
+    _recentlyPlayed.insert(0, radio); // Add to start
+    if (_recentlyPlayed.length > 4) {
+      _recentlyPlayed = _recentlyPlayed.take(4).toList(); // Limit to 4
+    }
+    final radiosJson = jsonEncode(
+      _recentlyPlayed.map((r) => r.toJson()).toList(),
     );
-    await prefs.setString('favorites', favoritesJson);
+    await prefs.setString(_recentKey, radiosJson);
+    notifyListeners();
   }
 
-  Future<void> _loadRecentlyPlayed() async {
+  Future<void> addFavorite(RadioStation radio) async {
     final prefs = await SharedPreferences.getInstance();
-    final String? recentJson = prefs.getString('recently_played');
-    if (recentJson != null) {
-      final List<dynamic> recentList = jsonDecode(recentJson);
-      _recentlyPlayed =
-          recentList.map((json) => RadioStation.fromJson(json)).toList();
-      notifyListeners();
+    _favorites.removeWhere((r) => r.id == radio.id); // Remove duplicates
+    _favorites.add(radio);
+    final favoritesJson = jsonEncode(
+      _favorites.map((r) => r.toJson()).toList(),
+    );
+    await prefs.setString(_favoriteKey, favoritesJson);
+    notifyListeners();
+  }
+
+  Future<void> removeFavorite(RadioStation radio) async {
+    final prefs = await SharedPreferences.getInstance();
+    _favorites.removeWhere((r) => r.id == radio.id);
+    final favoritesJson = jsonEncode(
+      _favorites.map((r) => r.toJson()).toList(),
+    );
+    await prefs.setString(_favoriteKey, favoritesJson);
+    notifyListeners();
+  }
+
+  bool isFavorite(RadioStation radio) {
+    return _favorites.any((r) => r.id == radio.id);
+  }
+
+  Future<void> toggleFavorite(RadioStation radio) async {
+    if (isFavorite(radio)) {
+      await removeFavorite(radio);
+    } else {
+      await addFavorite(radio);
     }
   }
 
-  Future<void> _saveRecentlyPlayed() async {
+  Future<String> getLastPlayedTime(String radioId) async {
     final prefs = await SharedPreferences.getInstance();
-    final recentJson = jsonEncode(
-      _recentlyPlayed.map((s) => s.toJson()).toList(),
-    );
-    await prefs.setString('recently_played', recentJson);
+    return prefs.getString('last_played_$radioId') ?? 'Unknown';
   }
 
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
+  Future<void> setLastPlayedTime(String radioId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'last_played_$radioId',
+      DateTime.now().toIso8601String(),
+    );
+    notifyListeners();
   }
 }

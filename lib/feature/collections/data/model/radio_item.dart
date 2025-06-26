@@ -6,6 +6,7 @@ class RadioItem {
   final String streamUrl;
   final String country;
   final bool featured;
+  final String color;
 
   RadioItem({
     required this.id,
@@ -15,6 +16,7 @@ class RadioItem {
     required this.streamUrl,
     required this.country,
     required this.featured,
+    required this.color,
   });
 
   factory RadioItem.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class RadioItem {
       streamUrl: json['stream_url'] ?? '',
       country: json['country'] ?? '',
       featured: json['featured'] ?? false,
+      color: json['color'] ?? '',
     );
   }
 }

@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:mazaj_radio/core/services/api_srvices.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
+import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
-
+import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
@@ -23,6 +25,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
   List<RadioStation> _searchResults = [];
   Timer? _debounce;
   bool _isLoading = false;
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -46,10 +49,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
     _debounce = Timer(const Duration(milliseconds: 300), () {
       if (query.isNotEmpty) {
         setState(() => _isLoading = true);
-        Provider.of<RadioProvider>(
-          context,
-          listen: false,
-        ).fetchRadios(search: query).then((results) {
+        _apiService.fetchRadios(search: query).then((results) {
           setState(() {
             _searchResults = results;
             _isLoading = false;
@@ -94,15 +94,23 @@ class _SearchViewBodyState extends State<SearchViewBody> {
     });
   }
 
+  RadioItem _toRadioItem(RadioStation station) {
+    return RadioItem(
+      id: station.id,
+      name: station.name,
+      logo: station.logo,
+      genres: station.genres,
+      streamUrl: station.streamUrl,
+      country: station.country,
+      featured: station.featured,
+      color: station.color,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final suggestedSearches = [
-      // S.of(context).categoryQuran,
-      // 'Amman',
-      // S.of(context).categoryTarab,
-      // S.of(context).categoryNews,
-    ];
+    final suggestedSearches = ['Quran', 'Amman', 'Tarab', 'News'];
 
     return SafeArea(
       child: Column(
@@ -119,7 +127,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
               controller: _controller,
               focusNode: _focusNode,
               decoration: InputDecoration(
-                hintText: 'searchHint',
+                hintText: 'Search for stations...',
                 prefixIcon: Icon(
                   Iconsax.search_normal_1,
                   color:
@@ -140,7 +148,9 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                         : null,
                 filled: true,
                 fillColor:
-                    isDark ? AppColors.greyDark.withOpacity(0.2) : Colors.white,
+                    isDark
+                        ? const Color.fromRGBO(66, 66, 66, 0.2)
+                        : Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide.none,
@@ -150,7 +160,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                   borderSide: BorderSide(
                     color:
                         isDark
-                            ? AppColors.greyDark.withOpacity(0.2)
+                            ? const Color.fromRGBO(66, 66, 66, 0.2)
                             : AppColors.greyLight,
                   ),
                 ),
@@ -170,10 +180,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _controller.text.isEmpty
-                    ? _buildSuggestions(
-                      context,
-                      suggestedSearches.cast<String>(),
-                    )
+                    ? _buildSuggestions(context, suggestedSearches)
                     : _buildSearchResults(context),
           ),
         ],
@@ -195,12 +202,12 @@ class _SearchViewBodyState extends State<SearchViewBody> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'recentSearches',
+                  'Recent Searches',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 TextButton(
                   onPressed: _clearRecentSearches,
-                  child: Text('clear'),
+                  child: const Text('Clear'),
                 ),
               ],
             ),
@@ -224,7 +231,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
             const SizedBox(height: 16),
           ],
           Text(
-            'uggestedSearches',
+            'Suggested Searches',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
@@ -252,8 +259,9 @@ class _SearchViewBodyState extends State<SearchViewBody> {
 
   Widget _buildSearchResults(BuildContext context) {
     final radioProvider = Provider.of<RadioProvider>(context);
+    final cubit = context.read<AudioPlayerCubit>();
     return _searchResults.isEmpty
-        ? Center(child: Text('noResults'))
+        ? const Center(child: Text('No results found'))
         : ListView.builder(
           padding: const EdgeInsetsDirectional.only(start: 16, end: 16, top: 8),
           itemCount: _searchResults.length,
@@ -295,12 +303,13 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                   ),
                   onPressed: () {
                     radioProvider.toggleFavorite(station);
-                    radioProvider.playStation(station);
+                    cubit.playRadio(_toRadioItem(station), context);
                     _addToRecentSearches(_controller.text);
                   },
                 ),
                 onTap: () {
-                  radioProvider.playStation(station);
+                  cubit.playRadio(_toRadioItem(station), context);
+                  radioProvider.addRecentlyPlayed(station);
                   _addToRecentSearches(_controller.text);
                 },
               ),
