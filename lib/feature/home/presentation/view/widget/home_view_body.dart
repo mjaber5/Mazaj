@@ -1,3 +1,4 @@
+// home_view_body.dart
 import 'package:flutter/material.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:provider/provider.dart';
@@ -7,8 +8,8 @@ import 'package:mazaj_radio/feature/home/presentation/view/widget/hot_recommende
 import 'package:mazaj_radio/feature/home/presentation/view/widget/hot_recommended_section_title.dart';
 import 'package:mazaj_radio/feature/home/presentation/view/widget/recently_played_section.dart';
 import 'package:mazaj_radio/feature/home/presentation/view/widget/recently_played_section_item.dart';
+import 'package:mazaj_radio/core/util/widget/mini_player.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
-import 'package:mazaj_radio/feature/collections/presentation/view/widget/mini_player.dart';
 
 class HomeViewBody extends StatelessWidget {
   const HomeViewBody({super.key});
@@ -60,12 +61,14 @@ class HomeViewBody extends StatelessWidget {
                               .map(
                                 (entry) => RecentlyPlayedSectionItem(
                                   radio: entry.value,
+                                  index: entry.key,
                                 ),
                               )
                               .toList(),
                     );
                   },
                 ),
+                const SizedBox(height: 80), // Extra padding for MiniPlayer
               ],
             ),
           ),

@@ -1,8 +1,11 @@
+// layout_view.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:mazaj_radio/core/util/constant/sizes.dart';
+import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
 import 'package:mazaj_radio/feature/collections/presentation/view/collections_view.dart';
 import 'package:mazaj_radio/feature/favorite/presentation/view/favorite_view.dart';
 import 'package:mazaj_radio/feature/home/presentation/view/home_view.dart';
@@ -18,17 +21,25 @@ class LayoutView extends StatefulWidget {
 class _LayoutViewState extends State<LayoutView> {
   int currentIndex = 0;
   PageController pageController = PageController();
-  late String myId;
+
+  @override
+  void dispose() {
+    pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      extendBody: true,
-      body: _buildLayoutPageView(),
-      bottomNavigationBar: _buildNavigationBar(isDark),
+    return BlocProvider(
+      create: (_) => AudioPlayerCubit(),
+      child: Scaffold(
+        backgroundColor:
+            isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+        extendBody: true,
+        body: _buildLayoutPageView(),
+        bottomNavigationBar: _buildNavigationBar(isDark),
+      ),
     );
   }
 
@@ -45,7 +56,6 @@ class _LayoutViewState extends State<LayoutView> {
       },
       selectedIndex: currentIndex,
       indicatorColor: Colors.transparent,
-
       animationDuration: const Duration(milliseconds: 200),
       labelTextStyle: WidgetStateProperty.all(
         TextStyle(
@@ -54,7 +64,6 @@ class _LayoutViewState extends State<LayoutView> {
           color: isDark ? AppColors.greyLight : AppColors.greyDark,
         ),
       ),
-
       destinations: [
         NavigationDestination(
           icon: Icon(
@@ -66,7 +75,6 @@ class _LayoutViewState extends State<LayoutView> {
             size: AppTextSizes.iconMd,
           ),
           label: 'Home',
-
           selectedIcon: Icon(
             Iconsax.home,
             color: AppColors.accentColor,

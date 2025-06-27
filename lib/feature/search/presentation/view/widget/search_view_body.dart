@@ -1,3 +1,4 @@
+// search_view_body.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
@@ -10,6 +11,8 @@ import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
+
+import '../../../../../core/util/widget/mini_player.dart';
 
 class SearchViewBody extends StatefulWidget {
   const SearchViewBody({super.key});
@@ -143,7 +146,6 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                           },
                         )
                         : null,
-                //filled: true,
                 fillColor: isDark ? AppColors.greyDark : AppColors.greyLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
@@ -175,6 +177,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                     ? _buildSuggestions(context, suggestedSearches)
                     : _buildSearchResults(context),
           ),
+          const MiniPlayer(),
         ],
       ),
     );
