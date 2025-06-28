@@ -47,6 +47,12 @@ class _LayoutViewState extends State<LayoutView> {
 
   CrystalNavigationBar _buildNavigationBar(bool isDark) {
     return CrystalNavigationBar(
+      outlineBorderColor: Colors.transparent,
+      itemPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+      borderRadius: 30, // Ensure inner content respects rounded corners
+      backgroundColor: AppColors.accentColor.withOpacity(
+        0.1,
+      ), // Let the Container handle the background
       currentIndex: currentIndex,
       onTap: (index) {
         setState(() {

@@ -1,9 +1,9 @@
 // hot_recommended_card_item.dart
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:mazaj_radio/core/services/api_srvices.dart';
@@ -117,104 +117,34 @@ class HotRecommendedCardItem extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          colors: [
-            cardColor.withOpacity(0.9),
-            cardColor.withOpacity(0.6),
-            cardColor.withOpacity(0.3),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          stops: const [0.0, 0.5, 1.0],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: cardColor.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: -5,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: cardColor,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 1,
-              ),
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.05),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+            color: AppColors.accentColor.withOpacity(isDark ? 0.1 : 0.05),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16), // Reduced padding
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(height: 16), // Reduced space
+                  _buildRadioImage(radio, isPlaying),
+                  const SizedBox(height: 12), // Reduced space
+                  _buildRadioInfo(radio, isDark),
+                  const SizedBox(height: 14), // Reduced space
+                  _buildPlayControls(isPlaying, isLoading),
                 ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16), // Reduced padding
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildHeader(radio),
-                    _buildRadioImage(radio, isPlaying),
-                    _buildRadioInfo(radio, isDark),
-                    _buildPlayControls(isPlaying, isLoading),
-                  ],
-                ),
               ),
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader(RadioStation radio) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.3)),
-          ),
-          child: Text(
-            'FEATURED',
-            style: GoogleFonts.poppins(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              letterSpacing: 1,
-            ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            Icons.favorite_outline,
-            size: 16,
-            color: Colors.white.withOpacity(0.8),
-          ),
-        ),
-      ],
     );
   }
 
@@ -233,7 +163,7 @@ class HotRecommendedCardItem extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.3),
-              blurRadius: 20,
+              blurRadius: 60,
               offset: const Offset(0, 8),
             ),
           ],
@@ -262,7 +192,7 @@ class HotRecommendedCardItem extends StatelessWidget {
                     (_, __, ___) => Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.black.withOpacity(0.1),
                       ),
                       child: const Icon(
                         Icons.radio,
@@ -301,7 +231,7 @@ class HotRecommendedCardItem extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 14, // Reduced font size
             fontWeight: FontWeight.w700,
-            color: Colors.white,
+            color: AppColors.greyDark.withOpacity(isDark ? 0.9 : 1.0),
             height: 1.2,
           ),
         ),
@@ -309,7 +239,7 @@ class HotRecommendedCardItem extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: AppColors.greyDark.withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
@@ -319,7 +249,7 @@ class HotRecommendedCardItem extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 10, // Reduced font size
               fontWeight: FontWeight.w500,
-              color: Colors.white.withOpacity(0.9),
+              color: AppColors.greyDark.withOpacity(isDark ? 0.8 : 1.0),
             ),
           ),
         ),
@@ -330,7 +260,7 @@ class HotRecommendedCardItem extends StatelessWidget {
             Icon(
               Icons.location_on,
               size: 12,
-              color: Colors.white.withOpacity(0.7),
+              color: AppColors.greyDark.withOpacity(0.7),
             ),
             const SizedBox(width: 4),
             Flexible(
@@ -338,7 +268,7 @@ class HotRecommendedCardItem extends StatelessWidget {
                 radio.country,
                 style: GoogleFonts.poppins(
                   fontSize: 10, // Reduced font size
-                  color: Colors.white.withOpacity(0.7),
+                  color: AppColors.textPrimary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -355,9 +285,9 @@ class HotRecommendedCardItem extends StatelessWidget {
       width: double.infinity,
       height: 48, // Slightly reduced height
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: AppColors.greyDark.withOpacity(0.15),
         borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: AppColors.greyMedium.withOpacity(0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

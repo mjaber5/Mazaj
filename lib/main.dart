@@ -25,13 +25,19 @@ void main() async {
   );
 
   final audioPlayerCubit = AudioPlayerCubit(audioHandler);
-  await NotificationManager(audioHandler, audioPlayerCubit).init();
+  final notificationManager = NotificationManager(
+    audioHandler,
+    audioPlayerCubit,
+  );
+  await notificationManager.init();
+  debugPrint('NotificationManager initialized: $notificationManager');
 
   runApp(
     MultiProvider(
       providers: [
         Provider<MyAudioHandler>.value(value: audioHandler),
         Provider<AudioPlayerCubit>.value(value: audioPlayerCubit),
+        Provider<NotificationManager>.value(value: notificationManager),
         ChangeNotifierProvider(create: (_) => RadioProvider()),
       ],
       child: const MazajRadio(),
