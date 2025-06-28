@@ -8,6 +8,7 @@ import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
 import 'package:mazaj_radio/mazaj_radio.dart';
 import 'package:provider/provider.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
+import 'package:rxdart/rxdart.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +43,7 @@ void main() async {
 class NotificationManager {
   MyAudioHandler _audioHandler;
   AudioPlayerCubit _audioPlayerCubit;
-  static final NotificationManager _instance = NotificationManager._internal();
+  static final NotificationManager _instance = NotificationManager._();
   factory NotificationManager(
     MyAudioHandler audioHandler,
     AudioPlayerCubit cubit,
@@ -51,9 +52,12 @@ class NotificationManager {
     _instance._audioPlayerCubit = cubit;
     return _instance;
   }
-  NotificationManager._internal()
-    : _audioHandler = MyAudioHandler(),
-      _audioPlayerCubit = AudioPlayerCubit(MyAudioHandler());
+  NotificationManager._() // Private constructor for singleton
+    : _audioHandler =
+          MyAudioHandler(), // Initialize with a default MyAudioHandler
+      _audioPlayerCubit = AudioPlayerCubit(
+        MyAudioHandler(),
+      ); // Initialize with a default AudioPlayerCubit
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -121,17 +125,20 @@ class NotificationManager {
       }
     });
 
-    // Listen to playback state to update notification play/pause state
-    _audioHandler.playbackState.listen((state) async {
-      if (_audioPlayerCubit.state.currentRadio != null && _notificationShown) {
-        await updateNotification(
-          _audioPlayerCubit.state.currentRadio!.name,
-          _audioPlayerCubit.state.currentRadio!.genres,
-          _audioPlayerCubit.state.currentRadio!.id,
-          state.playing,
-        );
-      }
-    });
+    // Listen to playback state to update notification play/pause state with debounce
+    _audioHandler.playbackState
+        .debounceTime(const Duration(milliseconds: 100))
+        .listen((state) async {
+          if (_audioPlayerCubit.state.currentRadio != null &&
+              _notificationShown) {
+            await updateNotification(
+              _audioPlayerCubit.state.currentRadio!.name,
+              _audioPlayerCubit.state.currentRadio!.genres,
+              _audioPlayerCubit.state.currentRadio!.id,
+              state.playing,
+            );
+          }
+        });
   }
 
   Future<void> showPlayingNotification(

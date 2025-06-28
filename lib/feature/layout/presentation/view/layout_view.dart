@@ -38,7 +38,6 @@ class _LayoutViewState extends State<LayoutView> {
             Provider.of<MyAudioHandler>(context, listen: false),
           ),
       child: Scaffold(
-        // backgroundColor: Colors.transparent,
         extendBody: true,
         body: Stack(children: [_buildLayoutPageView()]),
         bottomNavigationBar: _buildNavigationBar(isDark),
@@ -83,7 +82,12 @@ class _LayoutViewState extends State<LayoutView> {
   PageView _buildLayoutPageView() {
     return PageView(
       controller: pageController,
-      children: [HomeView(), FavoriteView(), SearchView(), CollectionsView()],
+      children: const [
+        HomeView(),
+        FavoriteView(),
+        SearchView(),
+        CollectionsView(),
+      ],
       onPageChanged: (value) {
         setState(() {
           currentIndex = value;
