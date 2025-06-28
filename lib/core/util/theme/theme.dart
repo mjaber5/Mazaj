@@ -43,7 +43,7 @@ class AppTheme {
         color: AppColors.textPrimary,
       ),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: AppTextSizes.cardElevation,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTextSizes.cardRadiusMd),
@@ -84,7 +84,7 @@ class AppTheme {
         color: AppColors.textOnPrimary,
       ),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: AppTextSizes.cardElevation,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTextSizes.cardRadiusMd),
