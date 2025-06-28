@@ -1,5 +1,4 @@
-// Enhanced mini_player.dart
-
+// mini_player.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,23 +25,21 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     super.initState();
 
     _slideController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 50),
       vsync: this,
     );
 
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 1),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _slideController, curve: Curves.easeOutBack),
-    );
+    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
 
-    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
+    _pulseAnimation = Tween<double>(begin: 0.98, end: 1.02).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
@@ -60,16 +57,26 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
 
     return BlocConsumer<AudioPlayerCubit, AudioPlayerState>(
       listener: (context, state) {
-        if (state.currentRadio != null && !_slideController.isCompleted) {
-          _slideController.forward();
-          _pulseController.repeat(reverse: true);
-        } else if (state.currentRadio == null && _slideController.isCompleted) {
-          _slideController.reverse();
-          _pulseController.stop();
+        debugPrint(
+          'MiniPlayer state: currentRadio=${state.currentRadio?.id}, isPlaying=${state.isPlaying}, isLoading=${state.isLoading}',
+        );
+        if (state.currentRadio != null && state.currentRadio!.id.isNotEmpty) {
+          if (!_slideController.isCompleted) {
+            _slideController.forward();
+            _pulseController.repeat(reverse: true);
+          }
+        } else {
+          if (_slideController.isCompleted) {
+            _slideController.reverse();
+            _pulseController.stop();
+          }
         }
       },
       builder: (context, state) {
-        if (state.currentRadio == null) {
+        debugPrint(
+          'MiniPlayer builder: currentRadio=${state.currentRadio?.id}',
+        );
+        if (state.currentRadio == null || state.currentRadio!.id.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -124,25 +131,9 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     return GestureDetector(
       onTap: () {
         // TODO: Navigate to full player
-        // Navigator.push(
-        //   context,
-        //   PageRouteBuilder(
-        //     pageBuilder: (context, animation, _) => FullPlayerScreen(radio: state.currentRadio!),
-        //     transitionsBuilder: (context, animation, _, child) {
-        //       return SlideTransition(
-        //         position: Tween<Offset>(
-        //           begin: const Offset(0, 1),
-        //           end: Offset.zero,
-        //         ).animate(animation),
-        //         child: child,
-        //       );
-        //     },
-        //   ),
-        // );
       },
       onVerticalDragEnd: (details) {
         if (details.primaryVelocity! > 300) {
-          // Swipe down to dismiss
           cubit.stopRadio(context);
         }
       },
@@ -283,7 +274,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
       mainAxisSize: MainAxisSize.min,
       children: List.generate(3, (i) {
         return AnimatedContainer(
-          duration: Duration(milliseconds: 300 + (i * 100)),
+          duration: Duration(milliseconds: 200 + (i * 100)),
           margin: const EdgeInsets.symmetric(horizontal: 0.5),
           width: 2,
           height: [4, 8, 6][i].toDouble(),
@@ -304,7 +295,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Previous button (placeholder for future implementation)
         _buildControlButton(
           icon: Icons.skip_previous,
           onPressed: () {
@@ -314,10 +304,8 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
           isEnabled: false,
         ),
         const SizedBox(width: 8),
-
-        // Play/Pause button
         AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 100),
           width: 44,
           height: 44,
           decoration: BoxDecoration(
@@ -343,7 +331,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                 }
               },
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 100),
                 child:
                     state.isLoading
                         ? const SizedBox(
@@ -366,10 +354,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
             ),
           ),
         ),
-
         const SizedBox(width: 8),
-
-        // Next button (placeholder for future implementation)
         _buildControlButton(
           icon: Icons.skip_next,
           onPressed: () {

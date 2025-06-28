@@ -1,14 +1,15 @@
 // favorite_view_body.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
 import 'package:mazaj_radio/core/util/widget/custom_appbar.dart';
+import 'package:mazaj_radio/core/util/widget/mini_player.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
 import 'package:provider/provider.dart';
-
-import '../../../../../core/util/widget/mini_player.dart';
 
 class FavoriteViewBody extends StatelessWidget {
   const FavoriteViewBody({super.key});
@@ -79,9 +80,10 @@ class FavoriteCardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<AudioPlayerCubit>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return BlocBuilder<AudioPlayerCubit, AudioPlayerState>(
       builder: (context, state) {
+        final cubit = context.read<AudioPlayerCubit>();
         final isPlaying =
             state.currentRadio?.id == radioItem.id && state.isPlaying;
         final isLoading =
@@ -99,14 +101,30 @@ class FavoriteCardItem extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(15),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: CachedNetworkImage(
+                    imageUrl: radio.logo,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    placeholder:
+                        (context, url) => Container(
+                          color: Colors.grey.withOpacity(0.3),
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        ),
+                    errorWidget:
+                        (context, url, error) => Container(
+                          color: Colors.grey.withOpacity(0.3),
+                          child: Icon(
+                            Icons.radio,
+                            size: 30,
+                            color: Colors.white,
+                          ),
+                        ),
                   ),
-                  child: Icon(Icons.radio, color: Colors.white, size: 30),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -136,38 +154,62 @@ class FavoriteCardItem extends StatelessWidget {
                     ],
                   ),
                 ),
-                CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 22,
-                  child:
-                      isLoading
-                          ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.black,
-                              ),
-                            ),
-                          )
-                          : IconButton(
-                            icon: Icon(
-                              isPlaying ? Icons.pause : Icons.play_arrow,
-                              color: Colors.black,
-                            ),
-                            onPressed: () {
-                              if (isPlaying) {
-                                cubit.pauseRadio(context);
-                              } else {
-                                cubit.playRadio(radioItem, context);
-                                Provider.of<RadioProvider>(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Provider.of<RadioProvider>(context).isFavorite(radio)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color:
+                            Provider.of<RadioProvider>(
                                   context,
-                                  listen: false,
-                                ).addRecentlyPlayed(radio);
-                              }
-                            },
-                          ),
+                                ).isFavorite(radio)
+                                ? AppColors.accentColor
+                                : Colors.white,
+                      ),
+                      onPressed: () {
+                        Provider.of<RadioProvider>(
+                          context,
+                          listen: false,
+                        ).toggleFavorite(radio);
+                      },
+                    ),
+                    CircleAvatar(
+                      backgroundColor: Colors.white,
+                      radius: 22,
+                      child:
+                          isLoading
+                              ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.black,
+                                  ),
+                                ),
+                              )
+                              : IconButton(
+                                icon: Icon(
+                                  isPlaying ? Icons.pause : Icons.play_arrow,
+                                  color: Colors.black,
+                                ),
+                                onPressed: () {
+                                  if (isPlaying) {
+                                    cubit.pauseRadio(context);
+                                  } else {
+                                    cubit.playRadio(radioItem, context);
+                                    Provider.of<RadioProvider>(
+                                      context,
+                                      listen: false,
+                                    ).addRecentlyPlayed(radio);
+                                  }
+                                },
+                              ),
+                    ),
+                  ],
                 ),
               ],
             ),

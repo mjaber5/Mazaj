@@ -5,14 +5,13 @@ import 'package:iconsax/iconsax.dart';
 import 'package:mazaj_radio/core/services/api_srvices.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
+import 'package:mazaj_radio/core/util/widget/mini_player.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
-
-import '../../../../../core/util/widget/mini_player.dart';
 
 class SearchViewBody extends StatefulWidget {
   const SearchViewBody({super.key});
@@ -254,9 +253,9 @@ class _SearchViewBodyState extends State<SearchViewBody> {
 
   Widget _buildSearchResults(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final radioProvider = Provider.of<RadioProvider>(context);
     final cubit = context.read<AudioPlayerCubit>();
+
     return _searchResults.isEmpty
         ? const Center(child: Text('No results found'))
         : ListView.builder(
@@ -264,6 +263,15 @@ class _SearchViewBodyState extends State<SearchViewBody> {
           itemCount: _searchResults.length,
           itemBuilder: (context, index) {
             final station = _searchResults[index];
+            final isPlaying =
+                context.watch<AudioPlayerCubit>().state.currentRadio?.id ==
+                    station.id &&
+                context.watch<AudioPlayerCubit>().state.isPlaying;
+            final isLoading =
+                context.watch<AudioPlayerCubit>().state.currentRadio?.id ==
+                    station.id &&
+                context.watch<AudioPlayerCubit>().state.isLoading;
+
             return Card(
               margin: const EdgeInsetsDirectional.only(bottom: 8),
               child: ListTile(
@@ -310,23 +318,60 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                trailing: IconButton(
-                  icon: Icon(
-                    radioProvider.isFavorite(station)
-                        ? Iconsax.heart
-                        : Iconsax.heart_add,
-                    color:
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
                         radioProvider.isFavorite(station)
-                            ? AppColors.accentColor
-                            : (isDark
-                                ? AppColors.textOnPrimary
-                                : AppColors.textPrimary),
-                  ),
-                  onPressed: () {
-                    radioProvider.toggleFavorite(station);
-                    cubit.playRadio(_toRadioItem(station), context);
-                    _addToRecentSearches(_controller.text);
-                  },
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color:
+                            radioProvider.isFavorite(station)
+                                ? AppColors.accentColor
+                                : (isDark
+                                    ? AppColors.textOnPrimary
+                                    : AppColors.textPrimary),
+                      ),
+                      onPressed: () {
+                        radioProvider.toggleFavorite(station);
+                      },
+                    ),
+                    CircleAvatar(
+                      backgroundColor: Colors.white,
+                      radius: 22,
+                      child:
+                          isLoading
+                              ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.black,
+                                  ),
+                                ),
+                              )
+                              : IconButton(
+                                icon: Icon(
+                                  isPlaying ? Icons.pause : Icons.play_arrow,
+                                  color: Colors.black,
+                                ),
+                                onPressed: () {
+                                  if (isPlaying) {
+                                    cubit.pauseRadio(context);
+                                  } else {
+                                    cubit.playRadio(
+                                      _toRadioItem(station),
+                                      context,
+                                    );
+                                    radioProvider.addRecentlyPlayed(station);
+                                    _addToRecentSearches(_controller.text);
+                                  }
+                                },
+                              ),
+                    ),
+                  ],
                 ),
                 onTap: () {
                   cubit.playRadio(_toRadioItem(station), context);

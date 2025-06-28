@@ -20,7 +20,18 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
   }
 
   void _init() {
+    emit(
+      const AudioPlayerState(
+        currentRadio: null,
+        isPlaying: false,
+        isLoading: false,
+        error: null,
+      ),
+    );
     _audioPlayer.playerStateStream.listen((state) {
+      debugPrint(
+        'AudioPlayerCubit: Emitting state - playing=${state.playing}, processing=${state.processingState}',
+      );
       emit(
         this.state.copyWith(
           isPlaying: state.playing,
@@ -36,14 +47,16 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
   BuildContext get context => _context!;
 
   Future<void> playRadio(RadioItem radio, BuildContext context) async {
+    if (!context.mounted) return;
     _context = context;
     try {
+      debugPrint('AudioPlayerCubit: Playing radio ${radio.id}');
       if (state.currentRadio?.id == radio.id && state.isPlaying) {
         await pauseRadio(context);
         return;
       }
 
-      emit(state.copyWith(isLoading: true));
+      emit(state.copyWith(isLoading: true, currentRadio: radio));
       final mediaItem = MediaItem(
         id: radio.id,
         title: radio.name,
@@ -85,6 +98,7 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
           listen: false,
         ).setLastPlayedTime(radio.id);
       }
+      debugPrint('AudioPlayerCubit: Radio ${radio.id} playing');
       emit(
         state.copyWith(
           currentRadio: radio,
@@ -94,13 +108,19 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
         ),
       );
     } catch (e) {
+      debugPrint('AudioPlayerCubit: Error playing radio ${radio.id}: $e');
       emit(
-        state.copyWith(isLoading: false, error: 'Error playing ${radio.name}'),
+        state.copyWith(
+          isLoading: false,
+          error: 'Error playing ${radio.name}',
+          currentRadio: radio,
+        ),
       );
     }
   }
 
   Future<void> pauseRadio(BuildContext context) async {
+    if (!context.mounted) return;
     _context = context;
     await _audioPlayer.pause();
     if (_context?.mounted ?? false) {
@@ -114,15 +134,18 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
         state.currentRadio!.id,
         false,
       );
+      debugPrint('AudioPlayerCubit: Radio ${state.currentRadio!.id} paused');
       emit(state.copyWith(isPlaying: false, isLoading: false));
     }
   }
 
   Future<void> resumeRadio(BuildContext context) async {
+    if (!context.mounted) return;
     _context = context;
     if (state.currentRadio == null) return;
 
     try {
+      debugPrint('AudioPlayerCubit: Resuming radio ${state.currentRadio!.id}');
       emit(state.copyWith(isLoading: true));
       await _audioPlayer.play();
       if (_context?.mounted ?? false) {
@@ -137,8 +160,12 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
           true,
         );
       }
+      debugPrint('AudioPlayerCubit: Radio ${state.currentRadio!.id} resumed');
       emit(state.copyWith(isPlaying: true, isLoading: false));
     } catch (e) {
+      debugPrint(
+        'AudioPlayerCubit: Error resuming radio ${state.currentRadio!.id}: $e',
+      );
       emit(
         state.copyWith(
           isLoading: false,
@@ -149,6 +176,7 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
   }
 
   Future<void> stopRadio(BuildContext context) async {
+    if (!context.mounted) return;
     _context = context;
     await _audioPlayer.stop();
     if (_context?.mounted ?? false) {
@@ -157,6 +185,7 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
         listen: false,
       );
       await notificationManager.cancelNotification();
+      debugPrint('AudioPlayerCubit: Radio stopped');
       emit(
         state.copyWith(
           currentRadio: null,
