@@ -1,235 +1,56 @@
-import 'dart:io';
+import 'dart:io' show Platform;
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
 import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
 import 'package:mazaj_radio/mazaj_radio.dart';
-import 'package:provider/provider.dart';
-import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  final audioHandler = await AudioService.init(
-    builder: () => MyAudioHandler(),
-    config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.mazaj.radio/audio',
-      androidNotificationChannelName: 'Audio Playback',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-      androidNotificationIcon: 'mipmap/ic_launcher',
-    ),
-  );
-
-  final audioPlayerCubit = AudioPlayerCubit(audioHandler);
-  final notificationManager = NotificationManager(
-    audioHandler,
-    audioPlayerCubit,
-  );
-  await notificationManager.init();
-  debugPrint('NotificationManager initialized: $notificationManager');
-
-  runApp(
-    MultiProvider(
-      providers: [
-        Provider<MyAudioHandler>.value(value: audioHandler),
-        Provider<AudioPlayerCubit>.value(value: audioPlayerCubit),
-        Provider<NotificationManager>.value(value: notificationManager),
-        ChangeNotifierProvider(create: (_) => RadioProvider()),
-      ],
-      child: const MazajRadio(),
-    ),
-  );
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-}
 
-class NotificationManager {
-  MyAudioHandler _audioHandler;
-  AudioPlayerCubit _audioPlayerCubit;
-  static final NotificationManager _instance = NotificationManager._();
-  factory NotificationManager(
-    MyAudioHandler audioHandler,
-    AudioPlayerCubit cubit,
-  ) {
-    _instance._audioHandler = audioHandler;
-    _instance._audioPlayerCubit = cubit;
-    return _instance;
-  }
-  NotificationManager._() // Private constructor for singleton
-    : _audioHandler =
-          MyAudioHandler(), // Initialize with a default MyAudioHandler
-      _audioPlayerCubit = AudioPlayerCubit(
-        MyAudioHandler(),
-      ); // Initialize with a default AudioPlayerCubit
-
-  final FlutterLocalNotificationsPlugin _notificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  bool _notificationShown = false;
-
-  Future<void> init() async {
-    const androidInitSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
-    const iosInitSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
-    const initSettings = InitializationSettings(
-      android: androidInitSettings,
-      iOS: iosInitSettings,
-    );
-
-    await _notificationsPlugin.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: (response) async {
-        final payload = response.payload;
-        if (payload != null) {
-          final parts = payload.split('|');
-          final action = parts[0];
-          final radioId = parts[1];
-          final radio = _audioPlayerCubit.state.currentRadio;
-
-          if (radio != null && radio.id == radioId) {
-            switch (action) {
-              case 'play':
-                await _audioHandler.play();
-                break;
-              case 'pause':
-                await _audioHandler.pause();
-                break;
-            }
-          }
-        }
-      },
-    );
-
-    if (Platform.isAndroid) {
-      await _notificationsPlugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestNotificationsPermission();
-    }
-
-    // Listen to media item changes to show or cancel notification
-    _audioHandler.mediaItem.listen((mediaItem) async {
-      if (mediaItem != null && !_notificationShown) {
-        _notificationShown = true;
-        await showPlayingNotification(
-          mediaItem.title,
-          mediaItem.artist ?? '',
-          mediaItem.id,
-          mediaItem.artUri.toString(),
-        );
-      } else if (mediaItem == null && _notificationShown) {
-        _notificationShown = false;
-        await cancelNotification();
-      }
-    });
-
-    // Listen to playback state to update notification play/pause state with debounce
-    _audioHandler.playbackState
-        .debounceTime(const Duration(milliseconds: 100))
-        .listen((state) async {
-          if (_audioPlayerCubit.state.currentRadio != null &&
-              _notificationShown) {
-            await updateNotification(
-              _audioPlayerCubit.state.currentRadio!.name,
-              _audioPlayerCubit.state.currentRadio!.genres,
-              _audioPlayerCubit.state.currentRadio!.id,
-              state.playing,
-            );
-          }
-        });
+  // Request necessary permissions
+  if (Platform.isAndroid) {
+    // Request notification permission
+    var notificationStatus = await Permission.notification.request();
+    debugPrint('Notification permission status: $notificationStatus');
   }
 
-  Future<void> showPlayingNotification(
-    String title,
-    String artist,
-    String radioId,
-    String logo,
-  ) async {
-    const androidDetails = AndroidNotificationDetails(
-      'audio_playback',
-      'Audio Playback',
-      channelDescription: 'Notification for audio playback controls',
-      ongoing: true,
-      largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-      actions: [
-        AndroidNotificationAction(
-          'play',
-          'Play',
-          showsUserInterface: false,
-          cancelNotification: false,
-        ),
-        AndroidNotificationAction(
-          'pause',
-          'Pause',
-          showsUserInterface: false,
-          cancelNotification: false,
-        ),
-      ],
-      importance: Importance.high,
-      priority: Priority.high,
-      styleInformation: MediaStyleInformation(),
+  MyAudioHandler audioHandler;
+  try {
+    audioHandler = await AudioService.init(
+      builder: () => MyAudioHandler(),
+      config: const AudioServiceConfig(
+        // Android-specific configuration
+        androidNotificationChannelId: 'com.mazaj.radio.audio',
+        androidNotificationChannelName: 'Mazaj Radio Audio',
+        androidNotificationChannelDescription:
+            'Audio playback controls for Mazaj Radio',
+        androidNotificationOngoing: true,
+        androidNotificationClickStartsActivity: true,
+        androidStopForegroundOnPause:
+            true, // This must be true when androidNotificationOngoing is true
+        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidShowNotificationBadge: true,
+
+        // Preload audio for better performance
+        preloadArtwork: true,
+
+        // Auto-handling of audio interruptions
+        artDownscaleWidth: 64,
+        artDownscaleHeight: 64,
+
+        // Faster start time
+        fastForwardInterval: Duration(seconds: 10),
+        rewindInterval: Duration(seconds: 10),
+      ),
     );
-    final notificationDetails = NotificationDetails(android: androidDetails);
-    await _notificationsPlugin.show(
-      0,
-      title,
-      artist,
-      notificationDetails,
-      payload: 'play|$radioId',
-    );
+    debugPrint('AudioService initialized successfully');
+  } catch (e) {
+    debugPrint('Failed to initialize AudioService in main: $e');
+    rethrow;
   }
 
-  Future<void> updateNotification(
-    String title,
-    String artist,
-    String radioId,
-    bool isPlaying,
-  ) async {
-    if (!_notificationShown) return;
-    const androidDetails = AndroidNotificationDetails(
-      'audio_playback',
-      'Audio Playback',
-      channelDescription: 'Notification for audio playback controls',
-      ongoing: true,
-      largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-      actions: [
-        AndroidNotificationAction(
-          'play',
-          'Play',
-          showsUserInterface: false,
-          cancelNotification: false,
-        ),
-        AndroidNotificationAction(
-          'pause',
-          'Pause',
-          showsUserInterface: false,
-          cancelNotification: false,
-        ),
-      ],
-      importance: Importance.high,
-      priority: Priority.high,
-      styleInformation: MediaStyleInformation(),
-    );
-    final notificationDetails = NotificationDetails(android: androidDetails);
-    await _notificationsPlugin.show(
-      0,
-      title,
-      artist,
-      notificationDetails,
-      payload: '${isPlaying ? 'pause' : 'play'}|$radioId',
-    );
-  }
-
-  Future<void> cancelNotification() async {
-    _notificationShown = false;
-    await _notificationsPlugin.cancel(0);
-  }
+  runApp(MazajRadio(audioHandler: audioHandler));
 }

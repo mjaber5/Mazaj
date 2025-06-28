@@ -39,7 +39,7 @@ class _LayoutViewState extends State<LayoutView> {
           ),
       child: Scaffold(
         extendBody: true,
-        body: Stack(children: [_buildLayoutPageView()]),
+        body: _buildLayoutPageView(),
         bottomNavigationBar: _buildNavigationBar(isDark),
       ),
     );
@@ -47,8 +47,12 @@ class _LayoutViewState extends State<LayoutView> {
 
   CrystalNavigationBar _buildNavigationBar(bool isDark) {
     return CrystalNavigationBar(
-      outlineBorderColor: Colors.transparent,
-      itemPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+      paddingR: EdgeInsets.all(1),
+      marginR: const EdgeInsets.symmetric(horizontal: 50, vertical: 25),
+      itemPadding: EdgeInsets.symmetric(
+        vertical: 10,
+        horizontal: MediaQuery.of(context).size.width * 0.03,
+      ),
       borderRadius: 30, // Ensure inner content respects rounded corners
       backgroundColor: AppColors.accentColor.withOpacity(
         0.1,

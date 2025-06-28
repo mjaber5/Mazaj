@@ -1,19 +1,31 @@
 import 'package:flutter/material.dart';
-
 import 'package:mazaj_radio/core/util/app_router.dart';
 import 'package:mazaj_radio/core/util/theme/theme.dart';
+import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
+import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
+import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
+import 'package:provider/provider.dart';
 
 class MazajRadio extends StatelessWidget {
-  const MazajRadio({super.key});
+  final MyAudioHandler audioHandler;
+
+  const MazajRadio({super.key, required this.audioHandler});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      debugShowCheckedModeBanner: false,
-      routerConfig: AppRouter.router,
+    return MultiProvider(
+      providers: [
+        Provider<MyAudioHandler>.value(value: audioHandler),
+        Provider<AudioPlayerCubit>.value(value: AudioPlayerCubit(audioHandler)),
+        ChangeNotifierProvider(create: (_) => RadioProvider()),
+      ],
+      child: MaterialApp.router(
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
+        debugShowCheckedModeBanner: false,
+        routerConfig: AppRouter.router,
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -18,27 +19,43 @@ class MiniPlayer extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return Container(
-          height: 72,
-          decoration: BoxDecoration(
-            color:
-                isDark
-                    ? const Color(0xFF1A1A1A).withOpacity(0.95)
-                    : Colors.white.withOpacity(0.95),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                _buildRadioImage(state, isDark),
-                const SizedBox(width: 16),
-                Expanded(child: _buildRadioInfo(state, isDark)),
-                const SizedBox(width: 12),
-                _buildPlayControls(context, state, isDark),
-                const SizedBox(width: 12),
-                _buildCloseButton(context, isDark),
-              ],
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              height: 76,
+              width: MediaQuery.of(context).size.width - 32,
+              decoration: BoxDecoration(
+                color:
+                    isDark
+                        ? Colors.black.withOpacity(0.3)
+                        : Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color:
+                      isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.black.withOpacity(0.1),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    _buildRadioImage(state, isDark),
+                    const SizedBox(width: 14),
+                    Expanded(child: _buildRadioInfo(state, isDark)),
+                    const SizedBox(width: 10),
+                    _buildPlayControls(context, state, isDark),
+                    const SizedBox(width: 10),
+                    _buildCloseButton(context, isDark),
+                  ],
+                ),
+              ),
             ),
           ),
         );
@@ -108,10 +125,7 @@ class MiniPlayer extends StatelessWidget {
           state.isLoading ? 'Connecting...' : 'Now Playing',
           style: GoogleFonts.inter(
             fontSize: 12,
-            color:
-                isDark
-                    ? Colors.white.withOpacity(0.6)
-                    : Colors.black.withOpacity(0.6),
+            color: AppColors.accentColor,
             fontWeight: FontWeight.w500,
             letterSpacing: -0.1,
           ),

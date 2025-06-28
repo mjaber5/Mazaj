@@ -1,19 +1,24 @@
+<!-- Add these permissions to your AndroidManifest.xml -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.mazaj.radio">
-
-    <!-- Permissions for just_audio_background and flutter_local_notifications -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    
+    <!-- Essential Audio Service Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- Audio Focus Control -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <application
         android:label="Mazaj Radio"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true"
+        android:enableOnBackInvokedCallback="true"
         tools:replace="android:label">
-
+        
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
@@ -30,34 +35,33 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-        </activity>
-      
-        <!-- just_audio_background Service -->
-        <service
-            android:name="com.ryanheise.audioservice.AudioService"
-            android:exported="true"
-            android:foregroundServiceType="mediaPlayback"
-            tools:replace="android:exported">
+              
+            <!-- Media Button Handling -->
             <intent-filter>
-                <action android:name="android.media.browse.MediaBrowserService"/>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </activity>
+        
+        <!-- Audio Service -->
+        <service 
+            android:name="com.ryanheise.audioservice.AudioService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
-
-        <!-- just_audio_background Receiver -->
-        <receiver
+        
+        <!-- Media Button Receiver -->
+        <receiver 
             android:name="com.ryanheise.audioservice.MediaButtonReceiver"
-            android:exported="true"
-            tools:replace="android:exported">
+            android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON"/>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
-
-        <!-- Notification channel metadata -->
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="audio_playback"/>
-
+        
+        <!-- Removed Firebase notification channel metadata to avoid conflict -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2"/>

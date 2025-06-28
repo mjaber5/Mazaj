@@ -7,13 +7,25 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   MyAudioHandler() {
-    _listenForCurrentSongIndexChanges();
-    _audioPlayer.playbackEventStream.listen(_broadcastState);
-    _audioPlayer.processingStateStream.listen((state) {
-      if (state == ProcessingState.completed) {
-        stop();
-      }
-    });
+    try {
+      _listenForCurrentSongIndexChanges();
+      _audioPlayer.playbackEventStream.listen(_broadcastState);
+      _audioPlayer.processingStateStream.listen((state) {
+        debugPrint('MyAudioHandler: Processing state changed to $state');
+        if (state == ProcessingState.completed) {
+          stop();
+        }
+      });
+      _audioPlayer.playerStateStream.listen((playerState) {
+        debugPrint(
+          'MyAudioHandler: Player state - playing=${playerState.playing}',
+        );
+      });
+      debugPrint('MyAudioHandler: Initialized successfully');
+    } catch (e) {
+      debugPrint('MyAudioHandler: Initialization error: $e');
+      rethrow;
+    }
   }
 
   UriAudioSource _createAudioSource(MediaItem mediaItem) {
@@ -24,55 +36,99 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     _audioPlayer.currentIndexStream.listen((index) {
       final playlist = queue.value;
       if (index == null || playlist.isEmpty) return;
+      debugPrint('MyAudioHandler: Queue index changed to $index');
       mediaItem.add(playlist[index]);
     });
   }
 
   void _broadcastState(PlaybackEvent event) {
-    playbackState.add(
-      playbackState.value.copyWith(
-        controls: [
-          _audioPlayer.playing ? MediaControl.pause : MediaControl.play,
-        ],
-        systemActions: const {MediaAction.seek},
-        androidCompactActionIndices: const [0],
-        processingState:
-            {
-              ProcessingState.idle: AudioProcessingState.idle,
-              ProcessingState.loading: AudioProcessingState.loading,
-              ProcessingState.buffering: AudioProcessingState.buffering,
-              ProcessingState.ready: AudioProcessingState.ready,
-              ProcessingState.completed: AudioProcessingState.completed,
-            }[_audioPlayer.processingState]!,
-        playing: _audioPlayer.playing,
-        updatePosition: _audioPlayer.position,
-        bufferedPosition: _audioPlayer.bufferedPosition,
-        speed: _audioPlayer.speed,
-        queueIndex: event.currentIndex,
-      ),
+    final state = playbackState.value.copyWith(
+      controls: [MediaControl.play, MediaControl.pause, MediaControl.stop],
+      systemActions: const {
+        MediaAction.play,
+        MediaAction.pause,
+        MediaAction.stop,
+      },
+      androidCompactActionIndices: const [0, 1, 2], // play/pause, stop
+      processingState:
+          const {
+            ProcessingState.idle: AudioProcessingState.idle,
+            ProcessingState.loading: AudioProcessingState.loading,
+            ProcessingState.buffering: AudioProcessingState.buffering,
+            ProcessingState.ready: AudioProcessingState.ready,
+            ProcessingState.completed: AudioProcessingState.completed,
+          }[_audioPlayer.processingState]!,
+      playing: _audioPlayer.playing,
+      updatePosition: _audioPlayer.position,
+      bufferedPosition: _audioPlayer.bufferedPosition,
+      speed: _audioPlayer.speed,
+      queueIndex: event.currentIndex,
+    );
+    playbackState.add(state);
+    debugPrint(
+      'MyAudioHandler: Broadcast state - playing=${state.playing}, processing=${state.processingState}',
     );
   }
 
   Future<void> playRadio(RadioItem radio) async {
     try {
+      debugPrint('MyAudioHandler: Setting up radio ${radio.name}');
       final mediaItem = MediaItem(
         id: radio.streamUrl,
         title: radio.name,
         artist: radio.genres,
         artUri: Uri.parse(radio.logo),
+        duration: null, // Radio streams have no fixed duration
       );
 
-      await _audioPlayer.setAudioSource(_createAudioSource(mediaItem));
-      final newQueue = [mediaItem];
-      queue.add(newQueue);
+      // Set the MediaItem first
       this.mediaItem.add(mediaItem);
-      await _audioPlayer.play();
-    } catch (e) {
-      debugPrint('MyAudioHandler: Error playing radio: $e');
+      queue.add([mediaItem]);
+      debugPrint('MyAudioHandler: MediaItem set - ${mediaItem.title}');
+
+      // Update playback state to show loading
       playbackState.add(
         playbackState.value.copyWith(
-          errorCode: 1,
-          errorMessage: 'Error playing radio: $e',
+          processingState: AudioProcessingState.loading,
+          playing: false,
+          controls: [MediaControl.play, MediaControl.pause, MediaControl.stop],
+          systemActions: const {
+            MediaAction.play,
+            MediaAction.pause,
+            MediaAction.stop,
+          },
+          androidCompactActionIndices: const [0, 1, 2],
+        ),
+      );
+      debugPrint('MyAudioHandler: Loading state set for ${radio.name}');
+
+      // Set audio source and play
+      await _audioPlayer.setAudioSource(_createAudioSource(mediaItem));
+      debugPrint('MyAudioHandler: Audio source set for ${radio.name}');
+
+      await _audioPlayer.play();
+      debugPrint('MyAudioHandler: Playing radio ${radio.name}');
+
+      // Update playback state to show playing
+      playbackState.add(
+        playbackState.value.copyWith(
+          processingState: AudioProcessingState.ready,
+          playing: true,
+          controls: [MediaControl.play, MediaControl.pause, MediaControl.stop],
+          systemActions: const {
+            MediaAction.play,
+            MediaAction.pause,
+            MediaAction.stop,
+          },
+          androidCompactActionIndices: const [0, 1, 2],
+        ),
+      );
+    } catch (e) {
+      debugPrint('MyAudioHandler: Error playing radio ${radio.name}: $e');
+      playbackState.add(
+        playbackState.value.copyWith(
+          processingState: AudioProcessingState.error,
+          playing: false,
         ),
       );
     }
@@ -82,6 +138,22 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Future<void> play() async {
     try {
       await _audioPlayer.play();
+      debugPrint('MyAudioHandler: Playback started via notification');
+
+      // Update state to reflect playing
+      playbackState.add(
+        playbackState.value.copyWith(
+          playing: true,
+          processingState: AudioProcessingState.ready,
+          controls: [MediaControl.play, MediaControl.pause, MediaControl.stop],
+          systemActions: const {
+            MediaAction.play,
+            MediaAction.pause,
+            MediaAction.stop,
+          },
+          androidCompactActionIndices: const [0, 1, 2],
+        ),
+      );
     } catch (e) {
       debugPrint('MyAudioHandler: Error playing: $e');
     }
@@ -91,6 +163,22 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Future<void> pause() async {
     try {
       await _audioPlayer.pause();
+      debugPrint('MyAudioHandler: Playback paused via notification');
+
+      // Update state to reflect paused
+      playbackState.add(
+        playbackState.value.copyWith(
+          playing: false,
+          processingState: AudioProcessingState.ready,
+          controls: [MediaControl.play, MediaControl.pause, MediaControl.stop],
+          systemActions: const {
+            MediaAction.play,
+            MediaAction.pause,
+            MediaAction.stop,
+          },
+          androidCompactActionIndices: const [0, 1, 2],
+        ),
+      );
     } catch (e) {
       debugPrint('MyAudioHandler: Error pausing: $e');
     }
@@ -99,23 +187,24 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   @override
   Future<void> stop() async {
     try {
-      // Ensure the player is not loading to avoid "Loading interrupted"
-      if (_audioPlayer.processingState == ProcessingState.loading ||
-          _audioPlayer.processingState == ProcessingState.buffering) {
-        await _audioPlayer.stop();
-      }
       await _audioPlayer.stop();
-      // Clear the audio source safely
       await _audioPlayer.setAudioSource(EmptyAudioSource());
+
+      // Clear queue and media item
       queue.add([]);
       mediaItem.add(null);
+
+      // Update state to reflect stopped
       playbackState.add(
         playbackState.value.copyWith(
           processingState: AudioProcessingState.idle,
           playing: false,
+          controls: [],
+          systemActions: const {},
+          androidCompactActionIndices: const [],
         ),
       );
-      debugPrint('MyAudioHandler: Stopped successfully');
+      debugPrint('MyAudioHandler: Stopped successfully via notification');
     } catch (e) {
       debugPrint('MyAudioHandler: Error stopping player: $e');
     }
@@ -125,6 +214,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Future<void> seek(Duration position) async {
     try {
       await _audioPlayer.seek(position);
+      debugPrint('MyAudioHandler: Seek to $position');
     } catch (e) {
       debugPrint('MyAudioHandler: Error seeking: $e');
     }
@@ -135,6 +225,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     try {
       await _audioPlayer.seek(Duration.zero, index: index);
       await play();
+      debugPrint('MyAudioHandler: Skipped to queue item $index');
     } catch (e) {
       debugPrint('MyAudioHandler: Error skipping to queue item: $e');
     }
@@ -144,6 +235,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Future<void> skipToNext() async {
     try {
       await _audioPlayer.seekToNext();
+      debugPrint('MyAudioHandler: Skipped to next');
     } catch (e) {
       debugPrint('MyAudioHandler: Error skipping to next: $e');
     }
@@ -153,6 +245,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Future<void> skipToPrevious() async {
     try {
       await _audioPlayer.seekToPrevious();
+      debugPrint('MyAudioHandler: Skipped to previous');
     } catch (e) {
       debugPrint('MyAudioHandler: Error skipping to previous: $e');
     }
@@ -169,6 +262,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
         playbackState.value.copyWith(
           processingState: AudioProcessingState.idle,
           playing: false,
+          controls: [],
         ),
       );
       debugPrint('MyAudioHandler: Disposed successfully');
@@ -178,9 +272,8 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   }
 }
 
-// Define an EmptyAudioSource for safe clearing
 class EmptyAudioSource extends AudioSource {
-  Future<void> load() async {}
+  Future<void> prepare() async {}
 
   @override
   List<IndexedAudioSource> get sequence => const [];

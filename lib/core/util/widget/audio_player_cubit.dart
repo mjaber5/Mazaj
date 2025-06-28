@@ -4,7 +4,6 @@ import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
-import 'package:mazaj_radio/main.dart';
 import 'package:provider/provider.dart';
 import 'package:audio_service/audio_service.dart';
 
@@ -23,11 +22,13 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
         'AudioPlayerCubit: Emitting state - playing=${playbackState.playing}, processing=${playbackState.processingState}',
       );
       emit(
-        this.state.copyWith(
+        state.copyWith(
           isPlaying: playbackState.playing,
           isLoading:
               playbackState.processingState == AudioProcessingState.loading ||
               playbackState.processingState == AudioProcessingState.buffering,
+          position: playbackState.updatePosition,
+          bufferedPosition: playbackState.bufferedPosition,
         ),
       );
     });
@@ -46,16 +47,6 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
       await _audioHandler.playRadio(radio);
       if (!context.mounted) return;
       try {
-        final notificationManager = Provider.of<NotificationManager>(
-          context,
-          listen: false,
-        );
-        await notificationManager.showPlayingNotification(
-          radio.name,
-          radio.genres,
-          radio.id,
-          radio.logo,
-        );
         final radioStation = RadioStation(
           id: radio.id,
           name: radio.name,
@@ -78,7 +69,6 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
         debugPrint(
           'AudioPlayerCubit: Provider error for radio ${radio.id}: $e',
         );
-        // Continue playback even if provider fails
       }
       debugPrint('AudioPlayerCubit: Radio ${radio.id} playing');
       emit(
@@ -103,24 +93,14 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
 
   Future<void> pauseRadio(BuildContext context) async {
     if (!context.mounted) return;
-    await _audioHandler.pause();
-    if (!context.mounted) return;
     try {
-      final notificationManager = Provider.of<NotificationManager>(
-        context,
-        listen: false,
-      );
-      await notificationManager.updateNotification(
-        state.currentRadio!.name,
-        state.currentRadio!.genres,
-        state.currentRadio!.id,
-        false,
-      );
+      await _audioHandler.pause();
+      if (!context.mounted) return;
+      debugPrint('AudioPlayerCubit: Radio ${state.currentRadio!.id} paused');
+      emit(state.copyWith(isPlaying: false, isLoading: false));
     } catch (e) {
-      debugPrint('AudioPlayerCubit: Provider error on pause: $e');
+      debugPrint('AudioPlayerCubit: Error pausing radio: $e');
     }
-    debugPrint('AudioPlayerCubit: Radio ${state.currentRadio!.id} paused');
-    emit(state.copyWith(isPlaying: false, isLoading: false));
   }
 
   Future<void> resumeRadio(BuildContext context) async {
@@ -130,20 +110,6 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
       emit(state.copyWith(isLoading: true));
       await _audioHandler.play();
       if (!context.mounted) return;
-      try {
-        final notificationManager = Provider.of<NotificationManager>(
-          context,
-          listen: false,
-        );
-        await notificationManager.updateNotification(
-          state.currentRadio!.name,
-          state.currentRadio!.genres,
-          state.currentRadio!.id,
-          true,
-        );
-      } catch (e) {
-        debugPrint('AudioPlayerCubit: Provider error on resume: $e');
-      }
       debugPrint('AudioPlayerCubit: Radio ${state.currentRadio!.id} resumed');
       emit(state.copyWith(isPlaying: true, isLoading: false));
     } catch (e) {
@@ -159,41 +125,41 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
     }
   }
 
-  // In AudioPlayerCubit
   bool _isStopping = false;
   Future<void> stopRadio(BuildContext context) async {
     if (!context.mounted || _isStopping) return;
     _isStopping = true;
     debugPrint('AudioPlayerCubit: Stopping radio');
-    await _audioHandler.stop();
-    if (!context.mounted) {
-      _isStopping = false;
-      return;
-    }
     try {
-      final notificationManager = Provider.of<NotificationManager>(
-        context,
-        listen: false,
+      await _audioHandler.stop();
+      if (!context.mounted) {
+        _isStopping = false;
+        return;
+      }
+      debugPrint('AudioPlayerCubit: Radio stopped, emitting state');
+      emit(
+        state.copyWith(
+          currentRadio: null,
+          isPlaying: false,
+          isLoading: false,
+          error: null,
+          position: Duration.zero,
+          bufferedPosition: Duration.zero,
+        ),
       );
-      await notificationManager.cancelNotification();
     } catch (e) {
-      debugPrint('AudioPlayerCubit: Provider error on stop: $e');
+      debugPrint('AudioPlayerCubit: Error stopping radio: $e');
     }
-    debugPrint('AudioPlayerCubit: Radio stopped, emitting state');
-    emit(
-      state.copyWith(
-        currentRadio: null,
-        isPlaying: false,
-        isLoading: false,
-        error: null,
-      ),
-    );
     _isStopping = false;
   }
 
   @override
   Future<void> close() {
-    _audioHandler.stop();
+    try {
+      _audioHandler.stop();
+    } catch (e) {
+      debugPrint('AudioPlayerCubit: Error closing cubit: $e');
+    }
     return super.close();
   }
 }

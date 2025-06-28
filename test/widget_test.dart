@@ -7,13 +7,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
 
 import 'package:mazaj_radio/mazaj_radio.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MazajRadio());
+    // Provide a mock or fake audioHandler as required by MazajRadio
+    await tester.pumpWidget(MazajRadio(audioHandler: MyAudioHandler()));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
