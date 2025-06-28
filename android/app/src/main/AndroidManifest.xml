@@ -42,6 +42,11 @@
                 <action android:name="android.media.browse.MediaBrowserService"/>
             </intent-filter>
         </service>
+        <service android:name="com.ryanheise.audioservice.AudioService">
+    <intent-filter>
+        <action android:name="android.media.browse.MediaBrowserService" />
+    </intent-filter>
+        </service>
 
         <!-- just_audio_background Receiver -->
         <receiver

@@ -1,4 +1,3 @@
-// layout_view.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
@@ -6,10 +5,12 @@ import 'package:ionicons/ionicons.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:mazaj_radio/core/util/constant/sizes.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
+import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
 import 'package:mazaj_radio/feature/collections/presentation/view/collections_view.dart';
 import 'package:mazaj_radio/feature/favorite/presentation/view/favorite_view.dart';
 import 'package:mazaj_radio/feature/home/presentation/view/home_view.dart';
 import 'package:mazaj_radio/feature/search/presentation/view/search_view.dart';
+import 'package:provider/provider.dart';
 
 class LayoutView extends StatefulWidget {
   const LayoutView({super.key});
@@ -32,7 +33,10 @@ class _LayoutViewState extends State<LayoutView> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return BlocProvider(
-      create: (_) => AudioPlayerCubit(),
+      create:
+          (context) => AudioPlayerCubit(
+            Provider.of<MyAudioHandler>(context, listen: false),
+          ),
       child: Scaffold(
         backgroundColor:
             isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
@@ -136,12 +140,7 @@ class _LayoutViewState extends State<LayoutView> {
   PageView _buildLayoutPageView() {
     return PageView(
       controller: pageController,
-      children: const [
-        HomeView(),
-        FavoriteView(),
-        SearchView(),
-        CollectionsView(),
-      ],
+      children: [HomeView(), FavoriteView(), SearchView(), CollectionsView()],
       onPageChanged: (value) {
         setState(() {
           currentIndex = value;

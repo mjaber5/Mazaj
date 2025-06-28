@@ -1,34 +1,24 @@
-// audio_player_cubit.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
+import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
-import 'package:mazaj_radio/main.dart';
-import 'package:provider/provider.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
+import 'package:mazaj_radio/main.dart';
+import 'package:provider/provider.dart';
+import 'package:audio_service/audio_service.dart';
 
 part 'audio_player_state.dart';
 
 class AudioPlayerCubit extends Cubit<AudioPlayerState> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  BuildContext? _context;
+  final MyAudioHandler _audioHandler;
 
-  AudioPlayerCubit() : super(const AudioPlayerState()) {
+  AudioPlayerCubit(this._audioHandler) : super(const AudioPlayerState()) {
     _init();
   }
 
   void _init() {
-    emit(
-      const AudioPlayerState(
-        currentRadio: null,
-        isPlaying: false,
-        isLoading: false,
-        error: null,
-      ),
-    );
-    _audioPlayer.playerStateStream.listen((state) {
+    _audioHandler.playbackState.listen((state) {
       debugPrint(
         'AudioPlayerCubit: Emitting state - playing=${state.playing}, processing=${state.processingState}',
       );
@@ -36,19 +26,15 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
         this.state.copyWith(
           isPlaying: state.playing,
           isLoading:
-              state.processingState == ProcessingState.loading ||
-              state.processingState == ProcessingState.buffering,
+              state.processingState == AudioProcessingState.loading ||
+              state.processingState == AudioProcessingState.buffering,
         ),
       );
     });
   }
 
-  AudioPlayer get audioPlayer => _audioPlayer;
-  BuildContext get context => _context!;
-
   Future<void> playRadio(RadioItem radio, BuildContext context) async {
     if (!context.mounted) return;
-    _context = context;
     try {
       debugPrint('AudioPlayerCubit: Playing radio ${radio.id}');
       if (state.currentRadio?.id == radio.id && state.isPlaying) {
@@ -57,20 +43,10 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
       }
 
       emit(state.copyWith(isLoading: true, currentRadio: radio));
-      final mediaItem = MediaItem(
-        id: radio.id,
-        title: radio.name,
-        artist: radio.genres,
-        artUri: Uri.parse(radio.logo),
-      );
-
-      await _audioPlayer.setAudioSource(
-        AudioSource.uri(Uri.parse(radio.streamUrl), tag: mediaItem),
-      );
-      await _audioPlayer.play();
-      if (_context?.mounted ?? false) {
+      await _audioHandler.playRadio(radio);
+      if (context.mounted) {
         final notificationManager = Provider.of<NotificationManager>(
-          _context!,
+          context,
           listen: false,
         );
         await notificationManager.showPlayingNotification(
@@ -90,11 +66,11 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
           color: radio.color,
         );
         Provider.of<RadioProvider>(
-          _context!,
+          context,
           listen: false,
         ).addRecentlyPlayed(radioStation);
         Provider.of<RadioProvider>(
-          _context!,
+          context,
           listen: false,
         ).setLastPlayedTime(radio.id);
       }
@@ -121,11 +97,10 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
 
   Future<void> pauseRadio(BuildContext context) async {
     if (!context.mounted) return;
-    _context = context;
-    await _audioPlayer.pause();
-    if (_context?.mounted ?? false) {
+    await _audioHandler.pause();
+    if (context.mounted) {
       final notificationManager = Provider.of<NotificationManager>(
-        _context!,
+        context,
         listen: false,
       );
       await notificationManager.updateNotification(
@@ -140,17 +115,14 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
   }
 
   Future<void> resumeRadio(BuildContext context) async {
-    if (!context.mounted) return;
-    _context = context;
-    if (state.currentRadio == null) return;
-
+    if (!context.mounted || state.currentRadio == null) return;
     try {
       debugPrint('AudioPlayerCubit: Resuming radio ${state.currentRadio!.id}');
       emit(state.copyWith(isLoading: true));
-      await _audioPlayer.play();
-      if (_context?.mounted ?? false) {
+      await _audioHandler.play();
+      if (context.mounted) {
         final notificationManager = Provider.of<NotificationManager>(
-          _context!,
+          context,
           listen: false,
         );
         await notificationManager.updateNotification(
@@ -177,11 +149,10 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
 
   Future<void> stopRadio(BuildContext context) async {
     if (!context.mounted) return;
-    _context = context;
-    await _audioPlayer.stop();
-    if (_context?.mounted ?? false) {
+    await _audioHandler.stop();
+    if (context.mounted) {
       final notificationManager = Provider.of<NotificationManager>(
-        _context!,
+        context,
         listen: false,
       );
       await notificationManager.cancelNotification();
@@ -195,5 +166,11 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
         ),
       );
     }
+  }
+
+  @override
+  Future<void> close() {
+    _audioHandler.stop();
+    return super.close();
   }
 }

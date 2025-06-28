@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:just_audio_background/just_audio_background.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
+import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
 import 'package:mazaj_radio/mazaj_radio.dart';
 import 'package:provider/provider.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
@@ -10,39 +12,52 @@ import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.mazaj.radio/audio',
-    androidNotificationChannelName: 'Audio Playback',
-    androidNotificationOngoing: true,
-    androidStopForegroundOnPause: true,
-    androidNotificationIcon: 'mipmap/ic_launcher',
+  final audioHandler = await AudioService.init(
+    builder: () => MyAudioHandler(),
+    config: const AudioServiceConfig(
+      androidNotificationChannelId: 'com.mazaj.radio/audio',
+      androidNotificationChannelName: 'Audio Playback',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
+      androidNotificationIcon: 'mipmap/ic_launcher',
+    ),
   );
 
-  final audioPlayerCubit = AudioPlayerCubit();
-  await NotificationManager(audioPlayerCubit).init();
+  final audioPlayerCubit = AudioPlayerCubit(audioHandler);
+  await NotificationManager(audioHandler, audioPlayerCubit).init();
 
   runApp(
     MultiProvider(
       providers: [
+        Provider<MyAudioHandler>.value(value: audioHandler),
         Provider<AudioPlayerCubit>.value(value: audioPlayerCubit),
         ChangeNotifierProvider(create: (_) => RadioProvider()),
       ],
       child: const MazajRadio(),
     ),
   );
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 }
 
 class NotificationManager {
+  MyAudioHandler _audioHandler;
   AudioPlayerCubit _audioPlayerCubit;
   static final NotificationManager _instance = NotificationManager._internal();
-  factory NotificationManager(AudioPlayerCubit cubit) {
+  factory NotificationManager(
+    MyAudioHandler audioHandler,
+    AudioPlayerCubit cubit,
+  ) {
+    _instance._audioHandler = audioHandler;
     _instance._audioPlayerCubit = cubit;
     return _instance;
   }
-  NotificationManager._internal() : _audioPlayerCubit = AudioPlayerCubit();
+  NotificationManager._internal()
+    : _audioHandler = MyAudioHandler(),
+      _audioPlayerCubit = AudioPlayerCubit(MyAudioHandler());
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  bool _notificationShown = false;
 
   Future<void> init() async {
     const androidInitSettings = AndroidInitializationSettings(
@@ -71,16 +86,10 @@ class NotificationManager {
           if (radio != null && radio.id == radioId) {
             switch (action) {
               case 'play':
-                await _audioPlayerCubit.playRadio(
-                  radio,
-                  _audioPlayerCubit.context,
-                );
+                await _audioHandler.play();
                 break;
               case 'pause':
-                await _audioPlayerCubit.pauseRadio(_audioPlayerCubit.context);
-                break;
-              case 'stop':
-                await _audioPlayerCubit.stopRadio(_audioPlayerCubit.context);
+                await _audioHandler.pause();
                 break;
             }
           }
@@ -95,6 +104,34 @@ class NotificationManager {
           >()
           ?.requestNotificationsPermission();
     }
+
+    // Listen to media item changes to show or cancel notification
+    _audioHandler.mediaItem.listen((mediaItem) async {
+      if (mediaItem != null && !_notificationShown) {
+        _notificationShown = true;
+        await showPlayingNotification(
+          mediaItem.title,
+          mediaItem.artist ?? '',
+          mediaItem.id,
+          mediaItem.artUri.toString(),
+        );
+      } else if (mediaItem == null && _notificationShown) {
+        _notificationShown = false;
+        await cancelNotification();
+      }
+    });
+
+    // Listen to playback state to update notification play/pause state
+    _audioHandler.playbackState.listen((state) async {
+      if (_audioPlayerCubit.state.currentRadio != null && _notificationShown) {
+        await updateNotification(
+          _audioPlayerCubit.state.currentRadio!.name,
+          _audioPlayerCubit.state.currentRadio!.genres,
+          _audioPlayerCubit.state.currentRadio!.id,
+          state.playing,
+        );
+      }
+    });
   }
 
   Future<void> showPlayingNotification(
@@ -122,12 +159,6 @@ class NotificationManager {
           showsUserInterface: false,
           cancelNotification: false,
         ),
-        AndroidNotificationAction(
-          'stop',
-          'Stop',
-          showsUserInterface: false,
-          cancelNotification: true,
-        ),
       ],
       importance: Importance.high,
       priority: Priority.high,
@@ -149,6 +180,7 @@ class NotificationManager {
     String radioId,
     bool isPlaying,
   ) async {
+    if (!_notificationShown) return;
     const androidDetails = AndroidNotificationDetails(
       'audio_playback',
       'Audio Playback',
@@ -168,12 +200,6 @@ class NotificationManager {
           showsUserInterface: false,
           cancelNotification: false,
         ),
-        AndroidNotificationAction(
-          'stop',
-          'Stop',
-          showsUserInterface: false,
-          cancelNotification: true,
-        ),
       ],
       importance: Importance.high,
       priority: Priority.high,
@@ -185,11 +211,12 @@ class NotificationManager {
       title,
       artist,
       notificationDetails,
-      payload: (isPlaying ? 'pause' : 'play') + '|$radioId',
+      payload: '${isPlaying ? 'pause' : 'play'}|$radioId',
     );
   }
 
   Future<void> cancelNotification() async {
+    _notificationShown = false;
     await _notificationsPlugin.cancel(0);
   }
 }

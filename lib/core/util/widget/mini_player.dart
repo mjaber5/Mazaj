@@ -417,7 +417,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
           onTap: () {
-            cubit.stopRadio(context);
+            cubit.stopRadio(context); // Use the provided context
           },
           child: Icon(
             Icons.close,
