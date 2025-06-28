@@ -201,7 +201,13 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                 ),
                 TextButton(
                   onPressed: _clearRecentSearches,
-                  child: const Text('Clear'),
+                  child: const Text(
+                    'Clear',
+                    style: TextStyle(
+                      color: AppColors.accentColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),

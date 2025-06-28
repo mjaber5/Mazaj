@@ -25,21 +25,23 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     super.initState();
 
     _slideController = AnimationController(
-      duration: const Duration(milliseconds: 50),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
 
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
+    ).animate(
+      CurvedAnimation(parent: _slideController, curve: Curves.fastOutSlowIn),
+    );
 
-    _pulseAnimation = Tween<double>(begin: 0.98, end: 1.02).animate(
+    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
@@ -57,25 +59,26 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
 
     return BlocConsumer<AudioPlayerCubit, AudioPlayerState>(
       listener: (context, state) {
-        debugPrint(
-          'MiniPlayer state: currentRadio=${state.currentRadio?.id}, isPlaying=${state.isPlaying}, isLoading=${state.isLoading}',
-        );
         if (state.currentRadio != null && state.currentRadio!.id.isNotEmpty) {
           if (!_slideController.isCompleted) {
             _slideController.forward();
+          }
+          if (state.isPlaying && !_pulseController.isAnimating) {
             _pulseController.repeat(reverse: true);
+          } else if (!state.isPlaying) {
+            _pulseController.stop();
+            _pulseController.reset();
           }
         } else {
           if (_slideController.isCompleted) {
-            _slideController.reverse();
-            _pulseController.stop();
+            _slideController.reverse().then((_) {
+              _pulseController.stop();
+              _pulseController.reset();
+            });
           }
         }
       },
       builder: (context, state) {
-        debugPrint(
-          'MiniPlayer builder: currentRadio=${state.currentRadio?.id}',
-        );
         if (state.currentRadio == null || state.currentRadio!.id.isEmpty) {
           return const SizedBox.shrink();
         }
@@ -83,41 +86,60 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
         return SlideTransition(
           position: _slideAnimation,
           child: Container(
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, -5),
-                  spreadRadius: -5,
-                ),
-              ],
+            margin: const EdgeInsets.only(
+              left: 12.0,
+              right: 12.0,
+              bottom: 12.0, // Adjusted for better positioning
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color:
-                        isDark
-                            ? Colors.black.withOpacity(0.8)
-                            : Colors.white.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: _buildMiniPlayerContent(context, state, isDark),
-                ),
-              ),
-            ),
+            child: _buildMiniPlayerContainer(context, state, isDark),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildMiniPlayerContainer(
+    BuildContext context,
+    AudioPlayerState state,
+    bool isDark,
+  ) {
+    return Container(
+      height: 72,
+      decoration: BoxDecoration(
+        color:
+            isDark
+                ? const Color(0xFF1A1A1A).withOpacity(0.95)
+                : Colors.white.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.4 : 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            blurRadius: 40,
+            offset: const Offset(0, 16),
+            spreadRadius: -8,
+          ),
+        ],
+        border: Border.all(
+          color:
+              isDark
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.black.withOpacity(0.05),
+          width: 0.5,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: _buildMiniPlayerContent(context, state, isDark),
+        ),
+      ),
     );
   }
 
@@ -134,18 +156,19 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
       },
       onVerticalDragEnd: (details) {
         if (details.primaryVelocity! > 300) {
-          cubit.stopRadio(context);
+          _handleClose(context, cubit);
         }
       },
-      child: Container(
+      child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             _buildRadioImage(state, isDark),
             const SizedBox(width: 16),
             Expanded(child: _buildRadioInfo(state, isDark)),
-            _buildPlayControls(context, state, cubit),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
+            _buildPlayControls(context, state, cubit, isDark),
+            const SizedBox(width: 12),
             _buildCloseButton(context, cubit, isDark),
           ],
         ),
@@ -162,39 +185,51 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
           child: Hero(
             tag: 'mini_player_${state.currentRadio!.id}',
             child: Container(
-              width: 50,
-              height: 50,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.accentColor.withOpacity(0.3),
-                    blurRadius: state.isPlaying ? 8 : 4,
-                    offset: const Offset(0, 2),
+                    color: AppColors.accentColor.withOpacity(
+                      state.isPlaying ? 0.4 : 0.2,
+                    ),
+                    blurRadius: state.isPlaying ? 12 : 6,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 child: Stack(
                   children: [
                     CachedNetworkImage(
                       imageUrl: state.currentRadio!.logo,
-                      width: 50,
-                      height: 50,
+                      width: 48,
+                      height: 48,
                       fit: BoxFit.cover,
                       placeholder:
                           (_, __) => Container(
-                            color: Colors.grey.withOpacity(0.3),
-                            child: const Icon(Icons.radio, size: 25),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              Icons.radio,
+                              size: 24,
+                              color: Colors.grey.withOpacity(0.6),
+                            ),
                           ),
                       errorWidget:
                           (_, __, ___) => Container(
-                            color: Colors.grey.withOpacity(0.3),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                             child: Icon(
                               Icons.radio,
-                              size: 25,
-                              color: isDark ? Colors.white : Colors.black,
+                              size: 24,
+                              color: Colors.grey.withOpacity(0.6),
                             ),
                           ),
                     ),
@@ -202,13 +237,13 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Center(
                           child: Icon(
                             Icons.graphic_eq,
                             color: Colors.white,
-                            size: 20,
+                            size: 16,
                           ),
                         ),
                       ),
@@ -229,18 +264,19 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
       children: [
         Text(
           state.currentRadio!.name,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
+          style: GoogleFonts.inter(
+            fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: isDark ? AppColors.textOnPrimary : AppColors.textPrimary,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            letterSpacing: -0.2,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Row(
           children: [
-            if (state.isPlaying) ...[
+            if (state.isPlaying && !state.isLoading) ...[
               _buildMiniEqualizer(),
               const SizedBox(width: 8),
             ],
@@ -251,13 +287,16 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                     : state.isPlaying
                     ? 'Now Playing'
                     : 'Paused',
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
                   color:
-                      state.isPlaying
+                      state.isPlaying && !state.isLoading
                           ? AppColors.accentColor
-                          : AppColors.textsecondaryColor,
+                          : isDark
+                          ? Colors.white.withOpacity(0.6)
+                          : Colors.black.withOpacity(0.6),
                   fontWeight: FontWeight.w500,
+                  letterSpacing: -0.1,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -270,20 +309,23 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   }
 
   Widget _buildMiniEqualizer() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(3, (i) {
-        return AnimatedContainer(
-          duration: Duration(milliseconds: 200 + (i * 100)),
-          margin: const EdgeInsets.symmetric(horizontal: 0.5),
-          width: 2,
-          height: [4, 8, 6][i].toDouble(),
-          decoration: BoxDecoration(
-            color: AppColors.accentColor,
-            borderRadius: BorderRadius.circular(1),
-          ),
-        );
-      }),
+    return SizedBox(
+      width: 12,
+      height: 12,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(3, (i) {
+          return AnimatedContainer(
+            duration: Duration(milliseconds: 300 + (i * 100)),
+            width: 2,
+            height: [6, 10, 8][i].toDouble(),
+            decoration: BoxDecoration(
+              color: AppColors.accentColor,
+              borderRadius: BorderRadius.circular(1),
+            ),
+          );
+        }),
+      ),
     );
   }
 
@@ -291,109 +333,53 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     BuildContext context,
     AudioPlayerState state,
     AudioPlayerCubit cubit,
+    bool isDark,
   ) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildControlButton(
-          icon: Icons.skip_previous,
-          onPressed: () {
-            // TODO: Implement previous track
-          },
-          size: 32,
-          isEnabled: false,
-        ),
-        const SizedBox(width: 8),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.accentColor,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.accentColor.withOpacity(0.4),
-                blurRadius: state.isPlaying ? 8 : 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(22),
-              onTap: () {
-                if (state.isPlaying) {
-                  cubit.pauseRadio(context);
-                } else {
-                  cubit.resumeRadio(context);
-                }
-              },
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 100),
-                child:
-                    state.isLoading
-                        ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          ),
-                        )
-                        : Icon(
-                          state.isPlaying ? Icons.pause : Icons.play_arrow,
-                          key: ValueKey(state.isPlaying),
-                          color: Colors.white,
-                          size: 24,
-                        ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        _buildControlButton(
-          icon: Icons.skip_next,
-          onPressed: () {
-            // TODO: Implement next track
-          },
-          size: 32,
-          isEnabled: false,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildControlButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    required double size,
-    bool isEnabled = true,
-  }) {
     return Container(
-      width: size,
-      height: size,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(size / 2),
+        color: AppColors.accentColor,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentColor.withOpacity(0.3),
+            blurRadius: state.isPlaying ? 8 : 4,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(size / 2),
-          onTap: isEnabled ? onPressed : null,
-          child: Icon(
-            icon,
-            size: size * 0.6,
-            color:
-                isEnabled
-                    ? (Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Colors.black)
-                    : Colors.grey,
+          borderRadius: BorderRadius.circular(22),
+          onTap: () {
+            if (state.isPlaying) {
+              cubit.pauseRadio(context);
+            } else {
+              cubit.resumeRadio(context);
+            }
+          },
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child:
+                state.isLoading
+                    ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                    : Icon(
+                      state.isPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                      key: ValueKey(state.isPlaying),
+                      color: Colors.white,
+                      size: 22,
+                    ),
           ),
         ),
       ),
@@ -409,23 +395,32 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
       width: 36,
       height: 36,
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.2),
+        color:
+            isDark
+                ? Colors.white.withOpacity(0.1)
+                : Colors.black.withOpacity(0.05),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            cubit.stopRadio(context); // Use the provided context
-          },
+          onTap: () => _handleClose(context, cubit),
           child: Icon(
-            Icons.close,
-            size: 20,
-            color: isDark ? Colors.white : Colors.black87,
+            Icons.close_rounded,
+            size: 18,
+            color:
+                isDark
+                    ? Colors.white.withOpacity(0.8)
+                    : Colors.black.withOpacity(0.6),
           ),
         ),
       ),
     );
+  }
+
+  void _handleClose(BuildContext context, AudioPlayerCubit cubit) {
+    // Stop the radio completely which will dispose the mini player
+    cubit.stopRadio(context);
   }
 }

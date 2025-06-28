@@ -1,9 +1,9 @@
+import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
-import 'package:mazaj_radio/core/util/constant/sizes.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
 import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
 import 'package:mazaj_radio/feature/collections/presentation/view/collections_view.dart';
@@ -38,100 +38,43 @@ class _LayoutViewState extends State<LayoutView> {
             Provider.of<MyAudioHandler>(context, listen: false),
           ),
       child: Scaffold(
-        backgroundColor:
-            isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+        // backgroundColor: Colors.transparent,
         extendBody: true,
-        body: _buildLayoutPageView(),
+        body: Stack(children: [_buildLayoutPageView()]),
         bottomNavigationBar: _buildNavigationBar(isDark),
       ),
     );
   }
 
-  NavigationBar _buildNavigationBar(bool isDark) {
-    return NavigationBar(
-      height: 70,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      elevation: 0,
-      onDestinationSelected: (value) {
+  CrystalNavigationBar _buildNavigationBar(bool isDark) {
+    return CrystalNavigationBar(
+      currentIndex: currentIndex,
+      onTap: (index) {
         setState(() {
-          currentIndex = value;
-          pageController.jumpToPage(value);
+          currentIndex = index;
+          pageController.jumpToPage(index);
         });
       },
-      selectedIndex: currentIndex,
-      indicatorColor: Colors.transparent,
-      animationDuration: const Duration(milliseconds: 200),
-      labelTextStyle: WidgetStateProperty.all(
-        TextStyle(
-          fontSize: AppTextSizes.fontSizeXs,
-          fontWeight: FontWeight.w400,
-          color: isDark ? AppColors.greyLight : AppColors.greyDark,
+      items: [
+        CrystalNavigationBarItem(
+          icon: currentIndex == 0 ? Ionicons.home : Ionicons.home_outline,
+          selectedColor: AppColors.accentColor,
+          unselectedColor: AppColors.greyDark,
         ),
-      ),
-      destinations: [
-        NavigationDestination(
-          icon: Icon(
-            Iconsax.home,
-            color:
-                isDark
-                    ? AppColors.greyLight.withOpacity(0.5)
-                    : AppColors.greyDark.withOpacity(0.5),
-            size: AppTextSizes.iconMd,
-          ),
-          label: 'Home',
-          selectedIcon: Icon(
-            Iconsax.home,
-            color: AppColors.accentColor,
-            size: AppTextSizes.iconMd,
-          ),
+        CrystalNavigationBarItem(
+          icon: currentIndex == 1 ? Iconsax.heart5 : Iconsax.heart,
+          selectedColor: AppColors.accentColor,
+          unselectedColor: AppColors.greyDark,
         ),
-        NavigationDestination(
-          icon: Icon(
-            Ionicons.heart,
-            size: AppTextSizes.iconMd,
-            color:
-                isDark
-                    ? AppColors.greyLight.withOpacity(0.5)
-                    : AppColors.greyDark.withOpacity(0.5),
-          ),
-          label: 'Favorite',
-          selectedIcon: Icon(
-            Ionicons.heart,
-            size: AppTextSizes.iconMd,
-            color: AppColors.accentColor,
-          ),
+        CrystalNavigationBarItem(
+          icon: currentIndex == 2 ? Ionicons.search : Ionicons.search_outline,
+          selectedColor: AppColors.accentColor,
+          unselectedColor: AppColors.greyDark,
         ),
-        NavigationDestination(
-          icon: Icon(
-            Ionicons.search,
-            size: AppTextSizes.iconMd,
-            color:
-                isDark
-                    ? AppColors.greyLight.withOpacity(0.5)
-                    : AppColors.greyDark.withOpacity(0.5),
-          ),
-          label: 'Search',
-          selectedIcon: Icon(
-            Ionicons.search,
-            color: AppColors.accentColor,
-            size: AppTextSizes.iconMd,
-          ),
-        ),
-        NavigationDestination(
-          icon: Icon(
-            Icons.collections_outlined,
-            color:
-                isDark
-                    ? AppColors.greyLight.withOpacity(0.5)
-                    : AppColors.greyDark.withOpacity(0.5),
-            size: AppTextSizes.iconMd,
-          ),
-          label: 'Collections',
-          selectedIcon: Icon(
-            Icons.collections_outlined,
-            color: AppColors.accentColor,
-            size: AppTextSizes.iconMd,
-          ),
+        CrystalNavigationBarItem(
+          icon: currentIndex == 3 ? Ionicons.grid : Ionicons.grid_outline,
+          selectedColor: AppColors.accentColor,
+          unselectedColor: AppColors.greyDark,
         ),
       ],
     );
