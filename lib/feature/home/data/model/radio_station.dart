@@ -7,6 +7,7 @@ class RadioStation {
   final String country;
   final bool featured;
   final String color;
+  final String textColor; // ✅ New field
 
   RadioStation({
     required this.id,
@@ -17,6 +18,7 @@ class RadioStation {
     required this.country,
     required this.featured,
     required this.color,
+    required this.textColor, // ✅ Add to constructor
   });
 
   factory RadioStation.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class RadioStation {
       country: json['country'] ?? '',
       featured: json['featured'] ?? false,
       color: json['color'] ?? '#FFFFFF',
+      textColor: json['text_color'] ?? '#000000', // ✅ Add default text color
     );
   }
 
@@ -42,6 +45,7 @@ class RadioStation {
       'country': country,
       'featured': featured,
       'color': color,
+      'text_color': textColor, // ✅ Include in JSON output
     };
   }
 }

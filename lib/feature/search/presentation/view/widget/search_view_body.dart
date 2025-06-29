@@ -1,4 +1,3 @@
-// search_view_body.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +5,6 @@ import 'package:iconsax/iconsax.dart';
 import 'package:mazaj_radio/core/services/api_srvices.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
-import 'package:mazaj_radio/core/util/widget/mini_player.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
@@ -107,6 +105,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
       country: station.country,
       featured: station.featured,
       color: station.color,
+      textColor: station.textColor,
     );
   }
 
@@ -138,7 +137,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                 suffixIcon:
                     _controller.text.isNotEmpty
                         ? IconButton(
-                          icon: const Icon(CupertinoIcons.clear_),
+                          icon: const Icon(CupertinoIcons.clear),
                           onPressed: () {
                             _controller.clear();
                             _focusNode.requestFocus();
@@ -177,7 +176,6 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                     ? _buildSuggestions(context, suggestedSearches)
                     : _buildSearchResults(context),
           ),
-          Center(child: const MiniPlayer()),
         ],
       ),
     );

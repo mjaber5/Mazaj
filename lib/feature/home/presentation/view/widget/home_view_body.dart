@@ -1,7 +1,6 @@
 // home_view_body.dart
 import 'package:flutter/material.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
-import 'package:mazaj_radio/core/util/widget/mini_player.dart';
 import 'package:provider/provider.dart';
 import 'package:mazaj_radio/core/util/widget/custom_appbar.dart';
 import 'package:mazaj_radio/feature/home/presentation/view/widget/greeting_header.dart';
@@ -24,8 +23,8 @@ class HomeViewBody extends StatelessWidget {
           Expanded(
             child: ListView(
               padding: const EdgeInsetsDirectional.only(
-                start: 16,
-                end: 16,
+                start: 0,
+                end: 0,
                 top: 16,
               ),
               children: [
@@ -67,11 +66,10 @@ class HomeViewBody extends StatelessWidget {
                     );
                   },
                 ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.28),
               ],
             ),
           ),
-          const MiniPlayer(),
         ],
       ),
     );

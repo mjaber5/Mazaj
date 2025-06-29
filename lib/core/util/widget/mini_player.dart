@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,31 +23,32 @@ class MiniPlayer extends StatelessWidget {
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              width: MediaQuery.of(context).size.width * 0.9, // 16px padding on each side
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? AppColors.white.withOpacity(0.1) : AppColors.black.withOpacity(0.1),
-                ),
+          child: Container(
+            width:
+                MediaQuery.of(context).size.width *
+                0.86, // 16px padding on each side
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.greyDark : AppColors.greyLight,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color:
+                    isDark
+                        ? AppColors.white.withOpacity(0.1)
+                        : AppColors.black.withOpacity(0.1),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                child: Row(
-                  children: [
-                    _buildRadioImage(state, isDark),
-                    const SizedBox(width: 14),
-                    Expanded(child: _buildRadioInfo(state, isDark)),
-                    const SizedBox(width: 10),
-                    _buildPlayControls(context, state, isDark),
-                    const SizedBox(width: 10),
-                    _buildCloseButton(context, isDark),
-                  ],
-                ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+              child: Row(
+                children: [
+                  _buildRadioImage(state, isDark),
+                  const SizedBox(width: 14),
+                  Expanded(child: _buildRadioInfo(state, isDark)),
+                  const SizedBox(width: 10),
+                  _buildPlayControls(context, state, isDark),
+                  const SizedBox(width: 10),
+                  _buildCloseButton(context, isDark),
+                ],
               ),
             ),
           ),
@@ -70,28 +70,30 @@ class MiniPlayer extends StatelessWidget {
           width: 40,
           height: 40,
           fit: BoxFit.cover,
-          placeholder: (_, __) => Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              Icons.radio,
-              size: 24,
-              color: Colors.grey.withOpacity(0.6),
-            ),
-          ),
-          errorWidget: (_, __, ___) => Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              Icons.radio,
-              size: 24,
-              color: Colors.grey.withOpacity(0.6),
-            ),
-          ),
+          placeholder:
+              (_, __) => Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.radio,
+                  size: 24,
+                  color: Colors.grey.withOpacity(0.6),
+                ),
+              ),
+          errorWidget:
+              (_, __, ___) => Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.radio,
+                  size: 24,
+                  color: Colors.grey.withOpacity(0.6),
+                ),
+              ),
         ),
       ),
     );
@@ -116,11 +118,7 @@ class MiniPlayer extends StatelessWidget {
         ),
         const SizedBox(height: 3),
         Text(
-          state.isLoading
-              ? 'Connecting...'
-              : state.isPlaying
-                  ? 'Now Playing'
-                  : 'Paused',
+          state.currentRadio!.genres,
           style: GoogleFonts.inter(
             fontSize: 12,
             color: state.isPlaying ? AppColors.accentColor : Colors.grey,
@@ -135,7 +133,11 @@ class MiniPlayer extends StatelessWidget {
   }
 
   /// Builds the play/pause button for controlling playback.
-  Widget _buildPlayControls(BuildContext context, AudioPlayerState state, bool isDark) {
+  Widget _buildPlayControls(
+    BuildContext context,
+    AudioPlayerState state,
+    bool isDark,
+  ) {
     return Container(
       width: 40,
       height: 40,
@@ -157,21 +159,28 @@ class MiniPlayer extends StatelessWidget {
           },
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
-            child: state.isLoading
-                ? const SizedBox(
-                    width: 15,
-                    height: 10,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            child:
+                state.isLoading
+                    ? const SizedBox(
+                      width: 15,
+                      height: 10,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      ),
+                    )
+                    : Icon(
+                      state.isPlaying
+                          ? CupertinoIcons.pause
+                          : CupertinoIcons.play_arrow_solid,
+                      key: ValueKey(state.isPlaying),
+                      color: AppColors.white,
+                      size: 20,
                     ),
-                  )
-                : Icon(
-                    state.isPlaying ? CupertinoIcons.pause : CupertinoIcons.play_arrow_solid,
-                    key: ValueKey(state.isPlaying),
-                    color: AppColors.white,
-                    size: 20,
-                  ),
           ),
         ),
       ),
@@ -184,7 +193,10 @@ class MiniPlayer extends StatelessWidget {
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+        color:
+            isDark
+                ? Colors.white.withOpacity(0.1)
+                : Colors.black.withOpacity(0.05),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Material(
@@ -192,13 +204,18 @@ class MiniPlayer extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
           onTap: () {
-            debugPrint('MiniPlayer: Close button pressed, stopping radio and hiding mini player');
+            debugPrint(
+              'MiniPlayer: Close button pressed, stopping radio and hiding mini player',
+            );
             context.read<AudioPlayerCubit>().hideMiniPlayer();
           },
           child: Icon(
             CupertinoIcons.xmark,
             size: 18,
-            color: isDark ? Colors.white.withOpacity(0.8) : Colors.black.withOpacity(0.6),
+            color:
+                isDark
+                    ? Colors.white.withOpacity(0.8)
+                    : Colors.black.withOpacity(0.6),
           ),
         ),
       ),

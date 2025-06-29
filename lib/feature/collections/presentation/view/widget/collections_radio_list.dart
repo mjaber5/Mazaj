@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'dart:developer';
 
-
 class CollectionsRadioList extends StatelessWidget {
   final List<RadioItem> radios;
 
@@ -16,14 +15,14 @@ class CollectionsRadioList extends StatelessWidget {
 
     return GridView.builder(
       shrinkWrap: true,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       physics: const NeverScrollableScrollPhysics(),
       itemCount: radios.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-        childAspectRatio: 0.95,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 14,
+        childAspectRatio: 0.8,
       ),
       itemBuilder: (context, index) {
         final radio = radios[index];
@@ -37,7 +36,7 @@ class CollectionsRadioList extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: bgColor,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.15),
@@ -46,7 +45,7 @@ class CollectionsRadioList extends StatelessWidget {
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -55,8 +54,8 @@ class CollectionsRadioList extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
                       radio.logo,
-                      height: 60,
-                      width: 60,
+                      height: 120,
+                      width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder:
                           (_, __, ___) => Icon(
@@ -87,23 +86,19 @@ class CollectionsRadioList extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color:
-                        isDark
-                            ? AppColors.textPrimary.withOpacity(0.8)
-                            : AppColors.textPrimary.withOpacity(0.7),
+                    color: _parseColor(radio.textColor),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     radio.genres,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 11,
-                      color:
-                          isDark
-                              ? AppColors.textPrimary.withOpacity(0.8)
-                              : AppColors.textPrimary.withOpacity(0.7),
+                      color: _parseColor(radio.textColor),
                     ),
                   ),
                 ),

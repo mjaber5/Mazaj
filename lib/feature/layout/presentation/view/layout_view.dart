@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
+import 'package:mazaj_radio/core/util/widget/mini_player.dart';
 import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
 import 'package:mazaj_radio/feature/collections/presentation/view/collections_view.dart';
 import 'package:mazaj_radio/feature/favorite/presentation/view/favorite_view.dart';
@@ -32,31 +33,42 @@ class _LayoutViewState extends State<LayoutView> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return BlocProvider(
       create:
           (context) => AudioPlayerCubit(
             Provider.of<MyAudioHandler>(context, listen: false),
           ),
       child: Scaffold(
-        extendBody: true,
+        extendBody: false, // Ensure content does not extend behind nav bar
         body: _buildLayoutPageView(),
-        bottomNavigationBar: _buildNavigationBar(isDark),
+        floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            if (!isKeyboardVisible) MiniPlayer(),
+            if (!isKeyboardVisible) _buildNavigationBar(isDark),
+          ],
+        ),
+
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
     );
   }
 
   CrystalNavigationBar _buildNavigationBar(bool isDark) {
     return CrystalNavigationBar(
-      paddingR: EdgeInsets.all(1),
-      marginR: const EdgeInsets.symmetric(horizontal: 60, vertical: 25),
+      marginR: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+      enableFloatingNavBar: true, // Make nav bar fixed
       itemPadding: EdgeInsets.symmetric(
         vertical: 10,
-        horizontal: MediaQuery.of(context).size.width * 0.025,
+        horizontal: MediaQuery.of(context).size.width * 0.033,
       ),
-      borderRadius: 30, // Ensure inner content respects rounded corners
-      backgroundColor: AppColors.accentColor.withOpacity(
-        0.1,
-      ), // Let the Container handle the background
+      borderRadius: 30, // No border radius for fixed nav bar
+      backgroundColor:
+          isDark
+              ? AppColors.greyLight.withOpacity(0.2)
+              : AppColors.greyDark.withOpacity(0.3),
       currentIndex: currentIndex,
       onTap: (index) {
         setState(() {

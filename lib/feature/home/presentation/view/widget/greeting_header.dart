@@ -13,7 +13,7 @@ Widget buildGreetingHeader(BuildContext context) {
           : 'Good Evening';
 
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 16),
+    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
     child: Text(
       '$greeting 👋',
       style: Theme.of(context).textTheme.headlineSmall?.copyWith(

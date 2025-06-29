@@ -7,6 +7,7 @@ class RadioItem {
   final String country;
   final bool featured;
   final String color;
+  final String textColor;
 
   RadioItem({
     required this.id,
@@ -17,6 +18,7 @@ class RadioItem {
     required this.country,
     required this.featured,
     required this.color,
+    required this.textColor,
   });
 
   factory RadioItem.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class RadioItem {
       country: json['country'] ?? '',
       featured: json['featured'] ?? false,
       color: json['color'] ?? '',
+      textColor: json['text_color'] ?? '#000000',
     );
   }
 }

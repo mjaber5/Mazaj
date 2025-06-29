@@ -1,7 +1,6 @@
 // favorite_view_body.dart
 import 'package:flutter/material.dart';
 import 'package:mazaj_radio/core/util/widget/custom_appbar.dart';
-import 'package:mazaj_radio/core/util/widget/mini_player.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'package:mazaj_radio/feature/favorite/presentation/view/widget/favorite_card_item.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
@@ -46,6 +45,7 @@ class FavoriteViewBody extends StatelessWidget {
                         country: radio.country,
                         featured: radio.featured,
                         color: radio.color,
+                        textColor: radio.textColor,
                       );
                       return FavoriteCardItem(
                         radio: radio,
@@ -56,7 +56,6 @@ class FavoriteViewBody extends StatelessWidget {
                 },
               ),
             ),
-            const MiniPlayer(),
           ],
         ),
       ),

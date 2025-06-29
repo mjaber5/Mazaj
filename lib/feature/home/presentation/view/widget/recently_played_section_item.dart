@@ -69,6 +69,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
       country: radio.country,
       featured: radio.featured,
       color: radio.color,
+      textColor: radio.textColor,
     );
   }
 
@@ -91,65 +92,71 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                 final isLoading = isCurrentRadio && state.isLoading;
                 final cubit = context.read<AudioPlayerCubit>();
 
-                return GestureDetector(
-                  onTapDown: (_) => setState(() => _isPressed = true),
-                  onTapUp: (_) => setState(() => _isPressed = false),
-                  onTapCancel: () => setState(() => _isPressed = false),
-                  onTap: () => _handleTap(context, radioItem, cubit),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    transform:
-                        Matrix4.identity()..scale(_isPressed ? 0.98 : 1.0),
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 0,
-                      vertical: 6,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getBackgroundColor(isDark, isCurrentRadio),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color:
-                            isCurrentRadio
-                                ? AppColors.accentColor.withOpacity(0.3)
-                                : Colors.transparent,
-                        width: 2,
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 4,
+                  ),
+                  child: GestureDetector(
+                    onTapDown: (_) => setState(() => _isPressed = true),
+                    onTapUp: (_) => setState(() => _isPressed = false),
+                    onTapCancel: () => setState(() => _isPressed = false),
+                    onTap: () => _handleTap(context, radioItem, cubit),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      transform:
+                          Matrix4.identity()..scale(_isPressed ? 0.98 : 1.0),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 0,
+                        vertical: 6,
                       ),
-                      boxShadow: [
-                        BoxShadow(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getBackgroundColor(isDark, isCurrentRadio),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
                           color:
                               isCurrentRadio
-                                  ? AppColors.accentColor.withOpacity(0.2)
-                                  : AppColors.black.withOpacity(
-                                    isDark ? 0.3 : 0.1,
-                                  ),
-                          blurRadius: isCurrentRadio ? 15 : 8,
-                          offset: const Offset(0, 4),
-                          spreadRadius: isCurrentRadio ? 1 : -1,
+                                  ? AppColors.accentColor.withOpacity(0.3)
+                                  : Colors.transparent,
+                          width: 2,
                         ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        _buildRadioImage(isDark, isPlaying),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildRadioInfo(
-                            context,
-                            isDark,
-                            isCurrentRadio,
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                isCurrentRadio
+                                    ? AppColors.accentColor.withOpacity(0.2)
+                                    : AppColors.black.withOpacity(
+                                      isDark ? 0.3 : 0.1,
+                                    ),
+                            blurRadius: isCurrentRadio ? 15 : 8,
+                            offset: const Offset(0, 4),
+                            spreadRadius: isCurrentRadio ? 1 : -1,
                           ),
-                        ),
-                        _buildPlayButton(
-                          isPlaying,
-                          isLoading,
-                          cubit,
-                          radioItem,
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          _buildRadioImage(isDark, isPlaying),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildRadioInfo(
+                              context,
+                              isDark,
+                              isCurrentRadio,
+                            ),
+                          ),
+                          _buildPlayButton(
+                            isPlaying,
+                            isLoading,
+                            cubit,
+                            radioItem,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -276,7 +283,10 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
           children: [
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 2,
+                ),
                 decoration: BoxDecoration(
                   color: (isDark ? Colors.white : Colors.black).withOpacity(
                     0.1,
@@ -302,7 +312,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
             Icon(
               Ionicons.location,
               size: 12,
-              color: AppColors.textsecondaryColor,
+              color: isDark ? AppColors.textOnPrimary : AppColors.textPrimary,
             ),
             const SizedBox(width: 2),
             Flexible(
@@ -310,7 +320,8 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                 widget.radio.country,
                 style: GoogleFonts.poppins(
                   fontSize: 11,
-                  color: AppColors.textsecondaryColor,
+                  color:
+                      isDark ? AppColors.textOnPrimary : AppColors.textPrimary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -331,7 +342,8 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                 Icon(
                   CupertinoIcons.clock,
                   size: 13,
-                  color: AppColors.textsecondaryColor,
+                  color:
+                      isDark ? AppColors.textOnPrimary : AppColors.textPrimary,
                 ),
                 const SizedBox(width: 4),
                 Flexible(
@@ -339,7 +351,10 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                     'Last played: $lastPlayed',
                     style: GoogleFonts.poppins(
                       fontSize: 10,
-                      color: AppColors.textsecondaryColor,
+                      color:
+                          isDark
+                              ? AppColors.textOnPrimary
+                              : AppColors.textPrimary,
                       fontWeight: FontWeight.w400,
                     ),
                     maxLines: 1,
@@ -394,10 +409,12 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                     ? SizedBox(
                       width: 24,
                       height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isPlaying ? AppColors.white : AppColors.accentColor,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isPlaying ? AppColors.white : AppColors.accentColor,
+                          ),
                         ),
                       ),
                     )

@@ -14,7 +14,7 @@ class RecentlyPlayedSection extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
           child: Text(
             'Recently Played',
             style: GoogleFonts.poppins(

@@ -26,7 +26,8 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
       emit(
         state.copyWith(
           isPlaying: playbackState.playing,
-          isLoading: playbackState.processingState == AudioProcessingState.loading ||
+          isLoading:
+              playbackState.processingState == AudioProcessingState.loading ||
               playbackState.processingState == AudioProcessingState.buffering,
           position: playbackState.updatePosition,
           bufferedPosition: playbackState.bufferedPosition,
@@ -54,22 +55,25 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
     emit(
       state.copyWith(
         isPlaying: playbackState.playing,
-        isLoading: playbackState.processingState == AudioProcessingState.loading ||
+        isLoading:
+            playbackState.processingState == AudioProcessingState.loading ||
             playbackState.processingState == AudioProcessingState.buffering,
         position: playbackState.updatePosition,
         bufferedPosition: playbackState.bufferedPosition,
-        currentRadio: mediaItem != null
-            ? RadioItem(
-                id: mediaItem.id,
-                name: mediaItem.title,
-                logo: mediaItem.artUri.toString(),
-                genres: mediaItem.artist ?? '',
-                streamUrl: mediaItem.id,
-                country: '',
-                featured: false,
-                color: '',
-              )
-            : null,
+        currentRadio:
+            mediaItem != null
+                ? RadioItem(
+                  id: mediaItem.id,
+                  name: mediaItem.title,
+                  logo: mediaItem.artUri.toString(),
+                  genres: mediaItem.artist ?? '',
+                  streamUrl: mediaItem.id,
+                  country: '',
+                  featured: false,
+                  color: '',
+                  textColor: '',
+                )
+                : null,
       ),
     );
   }
@@ -87,7 +91,13 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
         return;
       }
 
-      emit(state.copyWith(isLoading: true, currentRadio: radio, isMiniPlayerVisible: true));
+      emit(
+        state.copyWith(
+          isLoading: true,
+          currentRadio: radio,
+          isMiniPlayerVisible: true,
+        ),
+      );
       await _audioHandler.playRadio(radio, context);
       if (!context.mounted) {
         debugPrint('AudioPlayerCubit: Context not mounted after playRadio');
@@ -103,11 +113,20 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
           country: radio.country,
           featured: radio.featured,
           color: radio.color,
+          textColor: radio.textColor,
         );
-        Provider.of<RadioProvider>(context, listen: false).addRecentlyPlayed(radioStation);
-        Provider.of<RadioProvider>(context, listen: false).setLastPlayedTime(radio.id);
+        Provider.of<RadioProvider>(
+          context,
+          listen: false,
+        ).addRecentlyPlayed(radioStation);
+        Provider.of<RadioProvider>(
+          context,
+          listen: false,
+        ).setLastPlayedTime(radio.id);
       } catch (e) {
-        debugPrint('AudioPlayerCubit: Provider error for radio ${radio.id}: $e');
+        debugPrint(
+          'AudioPlayerCubit: Provider error for radio ${radio.id}: $e',
+        );
       }
       debugPrint('AudioPlayerCubit: Radio ${radio.id} playing');
       emit(
@@ -150,7 +169,9 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
   /// Resumes playback of the paused radio.
   Future<void> resumeRadio(BuildContext context) async {
     if (!context.mounted || state.currentRadio == null) {
-      debugPrint('AudioPlayerCubit: Context not mounted or no radio selected, aborting resumeRadio');
+      debugPrint(
+        'AudioPlayerCubit: Context not mounted or no radio selected, aborting resumeRadio',
+      );
       return;
     }
     try {
@@ -160,7 +181,9 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
       debugPrint('AudioPlayerCubit: Radio ${state.currentRadio!.id} resumed');
       emit(state.copyWith(isPlaying: true, isLoading: false));
     } catch (e) {
-      debugPrint('AudioPlayerCubit: Error resuming radio ${state.currentRadio!.id}: $e');
+      debugPrint(
+        'AudioPlayerCubit: Error resuming radio ${state.currentRadio!.id}: $e',
+      );
       emit(
         state.copyWith(
           isLoading: false,
@@ -207,10 +230,14 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
   /// Shows the mini player if a radio is selected.
   void showMiniPlayer() {
     if (state.currentRadio != null) {
-      debugPrint('AudioPlayerCubit: Showing mini player for radio ${state.currentRadio!.id}');
+      debugPrint(
+        'AudioPlayerCubit: Showing mini player for radio ${state.currentRadio!.id}',
+      );
       emit(state.copyWith(isMiniPlayerVisible: true));
     } else {
-      debugPrint('AudioPlayerCubit: No radio selected, cannot show mini player');
+      debugPrint(
+        'AudioPlayerCubit: No radio selected, cannot show mini player',
+      );
     }
   }
 

@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:mazaj_radio/core/services/radio_service.dart';
 import 'package:mazaj_radio/core/util/widget/custom_appbar.dart';
-import 'package:mazaj_radio/core/util/widget/mini_player.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'package:mazaj_radio/feature/collections/presentation/view/widget/collections_radio_list.dart';
 
@@ -17,7 +16,7 @@ class CollectionsViewBody extends StatelessWidget {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Column(
+        child: ListView(
           children: [
             CustomAppBar(isDark: isDark, title: 'Collections'),
             const SizedBox(height: 24),
@@ -42,7 +41,6 @@ class CollectionsViewBody extends StatelessWidget {
                 },
               ),
             ),
-            const MiniPlayer(),
           ],
         ),
       ),

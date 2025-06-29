@@ -9,7 +9,6 @@ import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
 import 'package:provider/provider.dart';
 
-
 class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   final AudioPlayer _audioPlayer = AudioPlayer();
   BuildContext? _context; // Store context for RadioProvider access
@@ -229,6 +228,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
           country: radio.country,
           featured: radio.featured,
           color: radio.color,
+          textColor: radio.textColor,
         );
         Provider.of<RadioProvider>(
           _context!,
@@ -470,6 +470,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
             country: nextRadio.country,
             featured: nextRadio.featured,
             color: nextRadio.color,
+            textColor: nextRadio.textColor,
           ),
           _context!,
         );
@@ -511,6 +512,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
             country: prevRadio.country,
             featured: prevRadio.featured,
             color: prevRadio.color,
+            textColor: prevRadio.textColor,
           ),
           _context!,
         );
