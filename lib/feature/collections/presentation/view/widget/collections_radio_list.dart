@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
+import 'dart:developer';
+
 
 class CollectionsRadioList extends StatelessWidget {
   final List<RadioItem> radios;
@@ -30,7 +32,7 @@ class CollectionsRadioList extends StatelessWidget {
         return GestureDetector(
           onTap: () {
             // Add your navigation or play logic here
-            debugPrint('Tapped on ${radio.name}');
+            log('Tapped on ${radio.name}');
           },
           child: Container(
             decoration: BoxDecoration(

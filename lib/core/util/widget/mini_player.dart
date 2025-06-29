@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
 
+/// A compact widget that displays a mini audio player for controlling radio playback.
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
 
@@ -15,7 +17,8 @@ class MiniPlayer extends StatelessWidget {
 
     return BlocBuilder<AudioPlayerCubit, AudioPlayerState>(
       builder: (context, state) {
-        if (state.currentRadio == null || !state.isPlaying) {
+        // Hide the mini player if no radio is selected or explicitly hidden
+        if (state.currentRadio == null || state.isMiniPlayerVisible == false) {
           return const SizedBox.shrink();
         }
 
@@ -24,22 +27,16 @@ class MiniPlayer extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              width: MediaQuery.of(context).size.width - 32,
+              width: MediaQuery.of(context).size.width * 0.82, // 16px padding on each side
               decoration: BoxDecoration(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color:
-                      isDark
-                          ? AppColors.white.withOpacity(0.1)
-                          : AppColors.black.withOpacity(0.1),
+                  color: isDark ? AppColors.white.withOpacity(0.1) : AppColors.black.withOpacity(0.1),
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   children: [
                     _buildRadioImage(state, isDark),
@@ -59,47 +56,47 @@ class MiniPlayer extends StatelessWidget {
     );
   }
 
+  /// Builds the radio station logo image.
   Widget _buildRadioImage(AudioPlayerState state, bool isDark) {
     return Container(
-      width: 48,
-      height: 48,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(14)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: CachedNetworkImage(
           imageUrl: state.currentRadio!.logo,
-          width: 48,
-          height: 48,
+          width: 40,
+          height: 40,
           fit: BoxFit.cover,
-          placeholder:
-              (_, __) => Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  Icons.radio,
-                  size: 24,
-                  color: Colors.grey.withOpacity(0.6),
-                ),
-              ),
-          errorWidget:
-              (_, __, ___) => Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  Icons.radio,
-                  size: 24,
-                  color: Colors.grey.withOpacity(0.6),
-                ),
-              ),
+          placeholder: (_, __) => Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              Icons.radio,
+              size: 24,
+              color: Colors.grey.withOpacity(0.6),
+            ),
+          ),
+          errorWidget: (_, __, ___) => Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              Icons.radio,
+              size: 24,
+              color: Colors.grey.withOpacity(0.6),
+            ),
+          ),
         ),
       ),
     );
   }
 
+  /// Builds the radio station information (name and status).
   Widget _buildRadioInfo(AudioPlayerState state, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,10 +115,14 @@ class MiniPlayer extends StatelessWidget {
         ),
         const SizedBox(height: 3),
         Text(
-          state.isLoading ? 'Connecting...' : 'Now Playing',
+          state.isLoading
+              ? 'Connecting...'
+              : state.isPlaying
+                  ? 'Now Playing'
+                  : 'Paused',
           style: GoogleFonts.inter(
             fontSize: 12,
-            color: AppColors.accentColor,
+            color: state.isPlaying ? AppColors.accentColor : Colors.grey,
             fontWeight: FontWeight.w500,
             letterSpacing: -0.1,
           ),
@@ -132,14 +133,11 @@ class MiniPlayer extends StatelessWidget {
     );
   }
 
-  Widget _buildPlayControls(
-    BuildContext context,
-    AudioPlayerState state,
-    bool isDark,
-  ) {
+  /// Builds the play/pause button for controlling playback.
+  Widget _buildPlayControls(BuildContext context, AudioPlayerState state, bool isDark) {
     return Container(
-      width: 44,
-      height: 44,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
         color: AppColors.accentColor,
         borderRadius: BorderRadius.circular(22),
@@ -158,39 +156,34 @@ class MiniPlayer extends StatelessWidget {
           },
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
-            child:
-                state.isLoading
-                    ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                    : Icon(
-                      state.isPlaying
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      key: ValueKey(state.isPlaying),
-                      color: Colors.white,
-                      size: 22,
+            child: state.isLoading
+                ? const SizedBox(
+                    width: 15,
+                    height: 15,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
+                  )
+                : Icon(
+                    state.isPlaying ? CupertinoIcons.pause : CupertinoIcons.play_arrow_solid,
+                    key: ValueKey(state.isPlaying),
+                    color: AppColors.white,
+                    size: 20,
+                  ),
           ),
         ),
       ),
     );
   }
 
+  /// Builds the close button to stop the radio and hide the mini player.
   Widget _buildCloseButton(BuildContext context, bool isDark) {
     return Container(
-      width: 36,
-      height: 36,
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
-        color:
-            isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.black.withOpacity(0.05),
+        color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Material(
@@ -198,15 +191,13 @@ class MiniPlayer extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
           onTap: () {
-            context.read<AudioPlayerCubit>().stopRadio(context);
+            debugPrint('MiniPlayer: Close button pressed, stopping radio and hiding mini player');
+            context.read<AudioPlayerCubit>().hideMiniPlayer();
           },
           child: Icon(
-            Icons.close_rounded,
+            CupertinoIcons.xmark,
             size: 18,
-            color:
-                isDark
-                    ? Colors.white.withOpacity(0.8)
-                    : Colors.black.withOpacity(0.6),
+            color: isDark ? Colors.white.withOpacity(0.8) : Colors.black.withOpacity(0.6),
           ),
         ),
       ),

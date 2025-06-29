@@ -1,8 +1,8 @@
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
 import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
@@ -48,10 +48,10 @@ class _LayoutViewState extends State<LayoutView> {
   CrystalNavigationBar _buildNavigationBar(bool isDark) {
     return CrystalNavigationBar(
       paddingR: EdgeInsets.all(1),
-      marginR: const EdgeInsets.symmetric(horizontal: 50, vertical: 25),
+      marginR: const EdgeInsets.symmetric(horizontal: 60, vertical: 25),
       itemPadding: EdgeInsets.symmetric(
         vertical: 10,
-        horizontal: MediaQuery.of(context).size.width * 0.03,
+        horizontal: MediaQuery.of(context).size.width * 0.025,
       ),
       borderRadius: 30, // Ensure inner content respects rounded corners
       backgroundColor: AppColors.accentColor.withOpacity(
@@ -66,24 +66,28 @@ class _LayoutViewState extends State<LayoutView> {
       },
       items: [
         CrystalNavigationBarItem(
-          icon: currentIndex == 0 ? Ionicons.home : Ionicons.home_outline,
+          icon: currentIndex == 0 ? CupertinoIcons.home : CupertinoIcons.home,
           selectedColor: AppColors.accentColor,
-          unselectedColor: AppColors.greyDark,
+          unselectedColor: isDark ? AppColors.greyLight : AppColors.greyDark,
         ),
         CrystalNavigationBarItem(
           icon: currentIndex == 1 ? Iconsax.heart5 : Iconsax.heart,
           selectedColor: AppColors.accentColor,
-          unselectedColor: AppColors.greyDark,
+          unselectedColor: isDark ? AppColors.greyLight : AppColors.greyDark,
         ),
         CrystalNavigationBarItem(
-          icon: currentIndex == 2 ? Ionicons.search : Ionicons.search_outline,
+          icon:
+              currentIndex == 2 ? CupertinoIcons.search : CupertinoIcons.search,
           selectedColor: AppColors.accentColor,
-          unselectedColor: AppColors.greyDark,
+          unselectedColor: isDark ? AppColors.greyLight : AppColors.greyDark,
         ),
         CrystalNavigationBarItem(
-          icon: currentIndex == 3 ? Ionicons.grid : Ionicons.grid_outline,
+          icon:
+              currentIndex == 3
+                  ? CupertinoIcons.collections_solid
+                  : CupertinoIcons.collections,
           selectedColor: AppColors.accentColor,
-          unselectedColor: AppColors.greyDark,
+          unselectedColor: isDark ? AppColors.greyLight : AppColors.greyDark,
         ),
       ],
     );

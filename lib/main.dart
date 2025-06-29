@@ -1,11 +1,12 @@
 import 'dart:io' show Platform;
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:mazaj_radio/core/util/widget/my_audio_handler.dart';
 import 'package:mazaj_radio/mazaj_radio.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:developer';
+import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,9 +14,9 @@ void main() async {
 
   if (Platform.isAndroid) {
     var notificationStatus = await Permission.notification.request();
-    debugPrint('Notification permission status: $notificationStatus');
+    log('Notification permission status: $notificationStatus');
     if (!notificationStatus.isGranted) {
-      debugPrint(
+      log(
         'Notification permission denied; background audio may not work properly',
       );
     }
@@ -40,9 +41,9 @@ void main() async {
         artDownscaleHeight: 128,
       ),
     );
-    debugPrint('AudioService initialized successfully');
+    log('AudioService initialized successfully');
   } catch (e) {
-    debugPrint('Failed to initialize AudioService in main: $e');
+    log('Failed to initialize AudioService in main: $e');
     rethrow;
   }
 

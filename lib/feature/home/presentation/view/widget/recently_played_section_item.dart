@@ -1,8 +1,10 @@
 // recently_played_section_item.dart
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:ionicons/ionicons.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
@@ -162,12 +164,10 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
   Color _getBackgroundColor(bool isDark, bool isCurrentRadio) {
     if (isCurrentRadio) {
       return isDark
-          ? AppColors.accentColor.withOpacity(0.1)
-          : AppColors.accentColor.withOpacity(0.05);
+          ? AppColors.accentColor.withOpacity(0.25)
+          : AppColors.accentColor.withOpacity(0.25);
     }
-    return isDark
-        ? AppColors.greyLight.withOpacity(0.6)
-        : AppColors.white.withOpacity(0.9);
+    return isDark ? AppColors.greyLight.withOpacity(0.1) : AppColors.greyLight;
   }
 
   Widget _buildRadioImage(bool isDark, bool isPlaying) {
@@ -300,7 +300,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
             ),
             const SizedBox(width: 8),
             Icon(
-              Icons.location_on,
+              Ionicons.location,
               size: 12,
               color: AppColors.textsecondaryColor,
             ),
@@ -329,8 +329,8 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
             return Row(
               children: [
                 Icon(
-                  Icons.access_time,
-                  size: 12,
+                  CupertinoIcons.clock,
+                  size: 13,
                   color: AppColors.textsecondaryColor,
                 ),
                 const SizedBox(width: 4),
@@ -402,7 +402,9 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                       ),
                     )
                     : Icon(
-                      isPlaying ? Icons.pause : Icons.play_arrow,
+                      isPlaying
+                          ? CupertinoIcons.pause
+                          : CupertinoIcons.play_arrow_solid,
                       size: 28,
                       color:
                           isPlaying ? AppColors.white : AppColors.accentColor,

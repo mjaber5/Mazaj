@@ -1,8 +1,10 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mazaj_radio/core/services/api_srvices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
+import 'dart:developer';
+import 'dart:convert';
+
 
 class RadioProvider with ChangeNotifier {
   List<RadioStation> _recentlyPlayed = [];
@@ -49,7 +51,7 @@ class RadioProvider with ChangeNotifier {
       _allStations = await _apiService.fetchRadios();
       notifyListeners();
     } catch (e) {
-      debugPrint('RadioProvider: Error loading all stations: $e');
+      log('RadioProvider: Error loading all stations: $e');
     }
   }
 

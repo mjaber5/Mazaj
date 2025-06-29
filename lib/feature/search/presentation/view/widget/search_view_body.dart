@@ -1,5 +1,6 @@
 // search_view_body.dart
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:mazaj_radio/core/services/api_srvices.dart';
@@ -119,9 +120,9 @@ class _SearchViewBodyState extends State<SearchViewBody> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsetsDirectional.only(
-              start: 16,
-              end: 16,
+            padding: EdgeInsetsDirectional.only(
+              start: MediaQuery.of(context).size.width * 0.04,
+              end: MediaQuery.of(context).size.width * 0.04,
               top: 16,
               bottom: 8,
             ),
@@ -131,13 +132,13 @@ class _SearchViewBodyState extends State<SearchViewBody> {
               decoration: InputDecoration(
                 hintText: 'Search for stations...',
                 prefixIcon: Icon(
-                  Iconsax.search_normal_1,
+                  CupertinoIcons.search,
                   color: isDark ? AppColors.greyLight : AppColors.greyDark,
                 ),
                 suffixIcon:
                     _controller.text.isNotEmpty
                         ? IconButton(
-                          icon: const Icon(Iconsax.close_circle),
+                          icon: const Icon(CupertinoIcons.clear_circled_solid),
                           onPressed: () {
                             _controller.clear();
                             _focusNode.requestFocus();
@@ -161,7 +162,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(
                     color: isDark ? AppColors.primaryColor : AppColors.greyDark,
-                    width: 2,
+                    width: 1.5,
                   ),
                 ),
               ),
@@ -187,7 +188,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
     List<String> suggestedSearches,
   ) {
     return SingleChildScrollView(
-      padding: const EdgeInsetsDirectional.only(start: 16, end: 16),
+      padding: const EdgeInsetsDirectional.only(start: 22, end: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -330,8 +331,8 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                     IconButton(
                       icon: Icon(
                         radioProvider.isFavorite(station)
-                            ? Icons.favorite
-                            : Icons.favorite_border,
+                            ? CupertinoIcons.heart_solid
+                            : CupertinoIcons.heart,
                         color:
                             radioProvider.isFavorite(station)
                                 ? AppColors.accentColor
@@ -360,7 +361,9 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                               )
                               : IconButton(
                                 icon: Icon(
-                                  isPlaying ? Icons.pause : Icons.play_arrow,
+                                  isPlaying
+                                      ? CupertinoIcons.pause
+                                      : CupertinoIcons.play_fill,
                                   color: Colors.black,
                                 ),
                                 onPressed: () {

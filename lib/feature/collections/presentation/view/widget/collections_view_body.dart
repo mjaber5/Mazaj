@@ -16,7 +16,7 @@ class CollectionsViewBody extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Column(
           children: [
             CustomAppBar(isDark: isDark, title: 'Collections'),

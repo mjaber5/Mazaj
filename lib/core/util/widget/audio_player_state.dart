@@ -1,5 +1,6 @@
 part of 'audio_player_cubit.dart';
 
+/// Represents the state of the audio player.
 class AudioPlayerState {
   final RadioItem? currentRadio;
   final bool isPlaying;
@@ -7,6 +8,7 @@ class AudioPlayerState {
   final String? error;
   final Duration position;
   final Duration bufferedPosition;
+  final bool isMiniPlayerVisible;
 
   const AudioPlayerState({
     this.currentRadio,
@@ -15,8 +17,10 @@ class AudioPlayerState {
     this.error,
     this.position = Duration.zero,
     this.bufferedPosition = Duration.zero,
+    this.isMiniPlayerVisible = true,
   });
 
+  /// Creates a new state with updated values, preserving unchanged ones.
   AudioPlayerState copyWith({
     RadioItem? currentRadio,
     bool? isPlaying,
@@ -24,6 +28,7 @@ class AudioPlayerState {
     String? error,
     Duration? position,
     Duration? bufferedPosition,
+    bool? isMiniPlayerVisible,
   }) {
     return AudioPlayerState(
       currentRadio: currentRadio ?? this.currentRadio,
@@ -32,6 +37,7 @@ class AudioPlayerState {
       error: error ?? this.error,
       position: position ?? this.position,
       bufferedPosition: bufferedPosition ?? this.bufferedPosition,
+      isMiniPlayerVisible: isMiniPlayerVisible ?? this.isMiniPlayerVisible,
     );
   }
 }

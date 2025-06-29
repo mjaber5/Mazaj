@@ -1,8 +1,10 @@
 // hot_recommended_card_item.dart
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ionicons/ionicons.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
@@ -272,7 +274,7 @@ class HotRecommendedCardItem extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.location_on,
+              Ionicons.location,
               size: 12,
               color: AppColors.greyDark.withOpacity(0.7),
             ),
@@ -323,7 +325,9 @@ class HotRecommendedCardItem extends StatelessWidget {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: Icon(
-                isPlaying ? Icons.pause : Icons.play_arrow,
+                isPlaying
+                    ? CupertinoIcons.pause
+                    : CupertinoIcons.play_arrow_solid,
                 key: ValueKey(isPlaying),
                 size: 28,
                 color: Colors.white,
