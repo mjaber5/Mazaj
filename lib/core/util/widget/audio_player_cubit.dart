@@ -32,6 +32,47 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
         ),
       );
     });
+
+    // Sync state when app resumes from background
+    WidgetsBinding.instance.addObserver(
+      _AppLifecycleObserver(
+        onResume: () {
+          _syncState();
+        },
+      ),
+    );
+  }
+
+  // Sync the cubit state with the audio handler state
+  void _syncState() {
+    final playbackState = _audioHandler.playbackState.value;
+    final mediaItem = _audioHandler.mediaItem.value;
+    debugPrint(
+      'AudioPlayerCubit: Syncing state - playing=${playbackState.playing}, mediaItem=${mediaItem?.title}',
+    );
+    emit(
+      state.copyWith(
+        isPlaying: playbackState.playing,
+        isLoading:
+            playbackState.processingState == AudioProcessingState.loading ||
+            playbackState.processingState == AudioProcessingState.buffering,
+        position: playbackState.updatePosition,
+        bufferedPosition: playbackState.bufferedPosition,
+        currentRadio:
+            mediaItem != null
+                ? RadioItem(
+                  id: mediaItem.id,
+                  name: mediaItem.title,
+                  logo: mediaItem.artUri.toString(),
+                  genres: mediaItem.artist ?? '',
+                  streamUrl: mediaItem.id,
+                  country: '',
+                  featured: false,
+                  color: '',
+                )
+                : null,
+      ),
+    );
   }
 
   Future<void> playRadio(RadioItem radio, BuildContext context) async {
@@ -160,6 +201,21 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
     } catch (e) {
       debugPrint('AudioPlayerCubit: Error closing cubit: $e');
     }
+    WidgetsBinding.instance.removeObserver(_AppLifecycleObserver());
     return super.close();
+  }
+}
+
+// Helper class to handle app lifecycle events
+class _AppLifecycleObserver with WidgetsBindingObserver {
+  final VoidCallback? onResume;
+
+  _AppLifecycleObserver({this.onResume});
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      onResume?.call();
+    }
   }
 }

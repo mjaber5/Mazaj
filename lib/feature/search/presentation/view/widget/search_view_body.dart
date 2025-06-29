@@ -176,7 +176,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                     ? _buildSuggestions(context, suggestedSearches)
                     : _buildSearchResults(context),
           ),
-          const MiniPlayer(),
+          Center(child: const MiniPlayer()),
         ],
       ),
     );

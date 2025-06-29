@@ -16,8 +16,12 @@ class MazajRadio extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<MyAudioHandler>.value(value: audioHandler),
-        Provider<AudioPlayerCubit>.value(value: AudioPlayerCubit(audioHandler)),
         ChangeNotifierProvider(create: (_) => RadioProvider()),
+        // Use create to ensure cubit is properly disposed
+        Provider<AudioPlayerCubit>(
+          create: (_) => AudioPlayerCubit(audioHandler),
+          dispose: (_, cubit) => cubit.close(),
+        ),
       ],
       child: MaterialApp.router(
         theme: AppTheme.lightTheme,

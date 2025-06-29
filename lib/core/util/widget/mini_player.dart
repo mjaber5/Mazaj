@@ -24,19 +24,15 @@ class MiniPlayer extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              height: 76,
               width: MediaQuery.of(context).size.width - 32,
               decoration: BoxDecoration(
-                color:
-                    isDark
-                        ? Colors.black.withOpacity(0.3)
-                        : Colors.white.withOpacity(0.3),
+                color: Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color:
                       isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.black.withOpacity(0.1),
+                          ? AppColors.white.withOpacity(0.1)
+                          : AppColors.black.withOpacity(0.1),
                 ),
               ),
               child: Padding(
