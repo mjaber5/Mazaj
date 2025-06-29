@@ -138,7 +138,7 @@ class _SearchViewBodyState extends State<SearchViewBody> {
                 suffixIcon:
                     _controller.text.isNotEmpty
                         ? IconButton(
-                          icon: const Icon(CupertinoIcons.clear_circled_solid),
+                          icon: const Icon(CupertinoIcons.clear_),
                           onPressed: () {
                             _controller.clear();
                             _focusNode.requestFocus();

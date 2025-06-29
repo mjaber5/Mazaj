@@ -27,7 +27,8 @@ class MiniPlayer extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              width: MediaQuery.of(context).size.width * 0.82, // 16px padding on each side
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              width: MediaQuery.of(context).size.width * 0.9, // 16px padding on each side
               decoration: BoxDecoration(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
@@ -36,7 +37,7 @@ class MiniPlayer extends StatelessWidget {
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                 child: Row(
                   children: [
                     _buildRadioImage(state, isDark),
@@ -159,7 +160,7 @@ class MiniPlayer extends StatelessWidget {
             child: state.isLoading
                 ? const SizedBox(
                     width: 15,
-                    height: 15,
+                    height: 10,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),

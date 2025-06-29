@@ -1,4 +1,3 @@
-// hot_recommended_card_item.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,7 +13,9 @@ import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'package:provider/provider.dart';
 import 'package:mazaj_radio/feature/home/presentation/view_model/radio_provider.dart';
+import 'dart:developer';
 
+/// A widget that displays a horizontal list of featured radio station cards.
 class HotRecommendedCardItem extends StatelessWidget {
   const HotRecommendedCardItem({super.key});
 
@@ -22,9 +23,7 @@ class HotRecommendedCardItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final apiService = ApiService();
     return SizedBox(
-      height:
-          MediaQuery.of(context).size.height *
-          0.35, // Increased height to accommodate content
+      height: MediaQuery.of(context).size.height * 0.35,
       child: FutureBuilder<List<RadioStation>>(
         future: apiService.fetchRadios(featured: true),
         builder: (context, snapshot) {
@@ -41,12 +40,14 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Builds the horizontal list of radio station cards.
   Widget _buildRadioList(BuildContext context, List<RadioStation> radios) {
+    log('HotRecommendedCardItem: Building radio list with ${radios.length} items');
     return ListView.builder(
       scrollDirection: Axis.horizontal,
       itemCount: radios.length,
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.zero, // Removed padding for edge-to-edge cards
+      physics: const BouncingScrollPhysics(), // Smooth, elastic scrolling
       itemBuilder: (context, index) {
         final radio = radios[index];
         final radioItem = _toRadioItem(radio);
@@ -56,6 +57,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Builds an individual radio station card.
   Widget _buildRadioCard(
     BuildContext context,
     RadioStation radio,
@@ -64,14 +66,12 @@ class HotRecommendedCardItem extends StatelessWidget {
     int index,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final cubit = context.read<AudioPlayerCubit>();
     final radioProvider = Provider.of<RadioProvider>(context, listen: false);
 
     return BlocBuilder<AudioPlayerCubit, AudioPlayerState>(
       builder: (context, state) {
-        final isCurrentRadio =
-            state.currentRadio?.streamUrl == radioItem.streamUrl;
+        final isCurrentRadio = state.currentRadio?.streamUrl == radioItem.streamUrl;
         final isPlaying = isCurrentRadio && state.isPlaying;
         final isLoading = isCurrentRadio && state.isLoading;
 
@@ -79,16 +79,14 @@ class HotRecommendedCardItem extends StatelessWidget {
           duration: Duration(milliseconds: 300 + (index * 90)),
           curve: Curves.easeOutBack,
           width: MediaQuery.of(context).size.width * 0.55,
-          margin: const EdgeInsets.only(right: 10, top: 8, bottom: 8),
+          margin: EdgeInsets.only(
+            left: index == 0 ? 22 : 8, // Margin for first card
+            right: index ==  - 1 ? 8 : 22, // Margin for last card
+            top: 8,
+            bottom: 8,
+          ),
           child: GestureDetector(
-            onTap:
-                () => _handleCardTap(
-                  context,
-                  radio,
-                  radioItem,
-                  radioProvider,
-                  cubit,
-                ),
+            onTap: () => _handleCardTap(context, radio, radioItem, radioProvider, cubit),
             onLongPress: () => _showRadioOptions(context, radio),
             child: Hero(
               tag: 'radio_card_${radio.id}',
@@ -110,6 +108,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Builds the content of a radio card.
   Widget _buildCardContent(
     BuildContext context,
     RadioStation radio,
@@ -135,19 +134,14 @@ class HotRecommendedCardItem extends StatelessWidget {
             color: AppColors.accentColor.withOpacity(isDark ? 0.1 : 0.05),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16), // Reduced padding
+            padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Reduced space
-                _buildRadioImage(radio, isPlaying),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.005,
-                ), // Reduced space
+                SizedBox(height: MediaQuery.of(context).size.height * 0.08),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                 _buildRadioInfo(radio, isDark),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.005,
-                ), // Reduced space
+                SizedBox(height: MediaQuery.of(context).size.height * 0.005),
                 _buildPlayControls(isPlaying, isLoading),
               ],
             ),
@@ -157,80 +151,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
-  Widget _buildRadioImage(RadioStation radio, bool isPlaying) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 500),
-      transform:
-          Matrix4.identity()
-            ..scale(isPlaying ? 1.1 : 1.0)
-            ..rotateZ(isPlaying ? 0.04 : 0.0),
-      child: Container(
-        width: 100,
-        height: 100,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 60,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipOval(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              CachedNetworkImage(
-                imageUrl: radio.logo,
-                fit: BoxFit.cover,
-                width: 110,
-                height: 110,
-                placeholder:
-                    (_, __) => Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.white,
-                      ),
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.white,
-                        ),
-                      ),
-                    ),
-                errorWidget:
-                    (_, __, ___) => Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.black.withOpacity(0.1),
-                      ),
-                      child: const Icon(
-                        Icons.radio,
-                        size: 40,
-                        color: Colors.white,
-                      ),
-                    ),
-              ),
-              if (isPlaying)
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.black.withOpacity(0.3),
-                  ),
-                  child: const Icon(
-                    Icons.graphic_eq,
-                    color: AppColors.white,
-                    size: 24,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
+  /// Builds the radio station information (name, genres, country).
   Widget _buildRadioInfo(RadioStation radio, bool isDark) {
     return Column(
       children: [
@@ -240,7 +161,7 @@ class HotRecommendedCardItem extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: GoogleFonts.poppins(
-            fontSize: 14, // Reduced font size
+            fontSize: 14,
             fontWeight: FontWeight.w700,
             color: AppColors.greyDark.withOpacity(isDark ? 0.9 : 1.0),
             height: 1.2,
@@ -258,7 +179,7 @@ class HotRecommendedCardItem extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
-              fontSize: 10, // Reduced font size
+              fontSize: 10,
               fontWeight: FontWeight.w500,
               color: AppColors.greyDark.withOpacity(isDark ? 0.8 : 1.0),
             ),
@@ -278,7 +199,7 @@ class HotRecommendedCardItem extends StatelessWidget {
               child: Text(
                 radio.country,
                 style: GoogleFonts.poppins(
-                  fontSize: 10, // Reduced font size
+                  fontSize: 10,
                   color: AppColors.textPrimary,
                 ),
                 maxLines: 1,
@@ -291,10 +212,11 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Builds the play controls (play/pause button and status text).
   Widget _buildPlayControls(bool isPlaying, bool isLoading) {
     return Container(
       width: double.infinity,
-      height: 44, // Slightly reduced height
+      height: 44,
       decoration: BoxDecoration(
         color: AppColors.greyDark.withOpacity(0.15),
         borderRadius: BorderRadius.circular(25),
@@ -320,9 +242,7 @@ class HotRecommendedCardItem extends StatelessWidget {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: Icon(
-                isPlaying
-                    ? CupertinoIcons.pause
-                    : CupertinoIcons.play_arrow_solid,
+                isPlaying ? CupertinoIcons.pause : CupertinoIcons.play_arrow_solid,
                 key: ValueKey(isPlaying),
                 size: 28,
                 color: Colors.white,
@@ -330,11 +250,9 @@ class HotRecommendedCardItem extends StatelessWidget {
             ),
           const SizedBox(width: 8),
           Text(
-            isLoading
-                ? 'Loading...'
-                : (isPlaying ? 'Now Playing' : 'Tap to Play'),
+            isLoading ? 'Loading...' : (isPlaying ? 'Now Playing' : 'Tap to Play'),
             style: GoogleFonts.poppins(
-              fontSize: 11, // Reduced font size
+              fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
@@ -344,6 +262,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Builds an animated equalizer effect for playing state.
   Widget _buildAdvancedEqualizer() {
     return Row(
       children: List.generate(4, (i) {
@@ -361,14 +280,14 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Builds an error card for failed data loading.
   Widget _buildErrorCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color:
-            isDark ? Colors.red.shade900.withOpacity(0.3) : Colors.red.shade50,
+        color: isDark ? Colors.red.shade900.withOpacity(0.3) : Colors.red.shade50,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.red.withOpacity(0.3)),
       ),
@@ -400,16 +319,14 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Builds an empty state card when no radios are available.
   Widget _buildEmptyCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color:
-            isDark
-                ? AppColors.greyMedium.withOpacity(0.3)
-                : AppColors.greyMedium,
+        color: isDark ? AppColors.greyMedium.withOpacity(0.3) : AppColors.greyMedium,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey.withOpacity(0.3)),
       ),
@@ -441,6 +358,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Handles card tap to play the radio and update recently played.
   void _handleCardTap(
     BuildContext context,
     RadioStation radio,
@@ -448,11 +366,13 @@ class HotRecommendedCardItem extends StatelessWidget {
     RadioProvider radioProvider,
     AudioPlayerCubit cubit,
   ) {
+    log('HotRecommendedCardItem: Tapped radio "${radio.name}"');
     radioProvider.addRecentlyPlayed(radio);
     radioProvider.setLastPlayedTime(radio.id);
     cubit.playRadio(radioItem, context);
   }
 
+  /// Shows a bottom sheet with radio options (share, favorite, report).
   void _showRadioOptions(BuildContext context, RadioStation radio) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -480,6 +400,7 @@ class HotRecommendedCardItem extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               _buildOptionTile(ctx, Icons.share_rounded, 'Share Radio', () {
+                log('HotRecommendedCardItem: Sharing radio "${radio.name}"');
                 Share.share(
                   "🎵 Listen to ${radio.name} on Mazaj Radio!\n"
                   "Genre: ${radio.genres}\n"
@@ -488,48 +409,35 @@ class HotRecommendedCardItem extends StatelessWidget {
                 );
                 Navigator.pop(ctx);
               }, isDark),
-              _buildOptionTile(
-                ctx,
-                Icons.favorite_outline,
-                'Add to Favorites',
-                () {
-                  Provider.of<RadioProvider>(
-                    context,
-                    listen: false,
-                  ).addFavorite(radio);
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Added ${radio.name} to favorites!"),
-                      backgroundColor: Colors.green,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+              _buildOptionTile(ctx, Icons.favorite_outline, 'Add to Favorites', () {
+                log('HotRecommendedCardItem: Adding "${radio.name}" to favorites');
+                Provider.of<RadioProvider>(context, listen: false).addFavorite(radio);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Added ${radio.name} to favorites!"),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  );
-                },
-                isDark,
-              ),
-              _buildOptionTile(
-                ctx,
-                Icons.report_outlined,
-                'Report Station',
-                () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text("Thank you for your feedback!"),
-                      backgroundColor: Colors.orange,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                  ),
+                );
+              }, isDark),
+              _buildOptionTile(ctx, Icons.report_outlined, 'Report Station', () {
+                log('HotRecommendedCardItem: Reporting station "${radio.name}"');
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text("Thank you for your feedback!"),
+                    backgroundColor: Colors.orange,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  );
-                },
-                isDark,
-              ),
+                  ),
+                );
+              }, isDark),
             ],
           ),
         );
@@ -537,6 +445,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Builds a bottom sheet option tile.
   Widget _buildOptionTile(
     BuildContext context,
     IconData icon,
@@ -569,33 +478,35 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Builds a shimmer effect for loading state.
   Widget _buildShimmerList(BuildContext context) {
     return ListView.builder(
       scrollDirection: Axis.horizontal,
       itemCount: 3,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.zero, // Removed padding for shimmer list
       itemBuilder: (_, index) => _shimmerCard(context, index),
     );
   }
 
+  /// Builds a shimmer card for loading placeholder.
   Widget _shimmerCard(BuildContext context, int index) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AnimatedContainer(
       duration: Duration(milliseconds: 300 + (index * 100)),
-      width: 240,
-      margin: const EdgeInsets.only(right: 20, top: 8, bottom: 8),
+      width: MediaQuery.of(context).size.width * 0.55,
+      margin: EdgeInsets.only(
+        left: index == 0 ? 16 : 8, // Margin for first card
+        right: index == 2 ? 16 : 8, // Margin for last card
+        top: 8,
+        bottom: 8,
+      ),
       child: Shimmer.fromColors(
-        baseColor:
-            isDark ? AppColors.greyMedium : AppColors.greyDark.withOpacity(0.6),
-        highlightColor:
-            isDark ? AppColors.greyMedium : AppColors.greyDark.withOpacity(0.3),
+        baseColor: isDark ? AppColors.greyMedium : AppColors.greyDark.withOpacity(0.6),
+        highlightColor: isDark ? AppColors.greyMedium : AppColors.greyDark.withOpacity(0.3),
         child: Container(
           decoration: BoxDecoration(
-            color:
-                isDark
-                    ? AppColors.greyMedium
-                    : AppColors.greyDark.withOpacity(0.1),
+            color: isDark ? AppColors.greyMedium : AppColors.greyDark.withOpacity(0.1),
             borderRadius: BorderRadius.circular(24),
           ),
         ),
@@ -603,6 +514,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Converts a RadioStation to a RadioItem for playback.
   RadioItem _toRadioItem(RadioStation radio) {
     return RadioItem(
       id: radio.id,
@@ -616,6 +528,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
+  /// Parses a color string to a Color object.
   Color _parseColor(String color) {
     try {
       return Color(int.parse(color.replaceFirst('#', '0xFF')));
