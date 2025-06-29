@@ -15,7 +15,7 @@ class CollectionsViewBody extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsetsDirectional.only(start: 0, end: 0, top: 14),
         child: ListView(
           children: [
             CustomAppBar(isDark: isDark, title: 'Collections'),
@@ -41,6 +41,7 @@ class CollectionsViewBody extends StatelessWidget {
                 },
               ),
             ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
           ],
         ),
       ),
