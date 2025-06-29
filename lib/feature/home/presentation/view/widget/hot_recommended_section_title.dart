@@ -14,7 +14,7 @@ class TitleSection extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           child: Text(
             'Hot Recommended',
             style: GoogleFonts.poppins(

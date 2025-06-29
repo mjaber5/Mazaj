@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
@@ -24,7 +23,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     return SizedBox(
       height:
           MediaQuery.of(context).size.height *
-          0.35, // Increased height to accommodate content
+          0.42, // Increased height to accommodate content
       child: FutureBuilder<List<RadioStation>>(
         future: apiService.fetchRadios(featured: true),
         builder: (context, snapshot) {
@@ -45,7 +44,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     return ListView.builder(
       scrollDirection: Axis.horizontal,
       itemCount: radios.length,
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       physics: const BouncingScrollPhysics(),
       itemBuilder: (context, index) {
         final radio = radios[index];
@@ -142,7 +141,7 @@ class HotRecommendedCardItem extends StatelessWidget {
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.004,
                 ), // Reduced space
-                _buildRadioImage(radio, isPlaying),
+                _buildRadioImage(radio, isPlaying, context),
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.005,
                 ), // Reduced space
@@ -159,75 +158,88 @@ class HotRecommendedCardItem extends StatelessWidget {
     );
   }
 
-  Widget _buildRadioImage(RadioStation radio, bool isPlaying) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 500),
-      transform:
-          Matrix4.identity()
-            ..scale(isPlaying ? 1.1 : 1.0)
-            ..rotateZ(isPlaying ? 0.04 : 0.0),
-      child: Container(
-        width: 100,
-        height: 100,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 60,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipOval(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              CachedNetworkImage(
-                imageUrl: radio.logo,
-                fit: BoxFit.cover,
-                width: 110,
-                height: 110,
-                placeholder:
-                    (_, __) => Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.white,
-                      ),
-                      child: const CircularProgressIndicator(
+  Widget _buildRadioImage(
+    RadioStation radio,
+    bool isPlaying,
+    BuildContext context,
+  ) {
+    return Container(
+      width: double.infinity,
+      height: MediaQuery.of(context).size.height * 0.2,
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // Background image
+            CachedNetworkImage(
+              imageUrl: radio.logo,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              placeholder:
+                  (_, __) => Container(
+                    color: AppColors.greyDark.withOpacity(0.1),
+                    child: const Center(
+                      child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
                           AppColors.white,
                         ),
                       ),
                     ),
-                errorWidget:
-                    (_, __, ___) => Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.black.withOpacity(0.1),
-                      ),
-                      child: const Icon(
-                        Icons.radio,
-                        size: 40,
-                        color: Colors.white,
-                      ),
-                    ),
-              ),
-              if (isPlaying)
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.black.withOpacity(0.3),
                   ),
+              errorWidget:
+                  (_, __, ___) => Container(
+                    color: AppColors.black.withOpacity(0.1),
+                    child: const Center(
+                      child: Icon(Icons.radio, size: 40, color: Colors.white),
+                    ),
+                  ),
+            ),
+
+            // Gradient overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withOpacity(0.25),
+                    Colors.black.withOpacity(0.05),
+                  ],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+              ),
+            ),
+
+            // Equalizer icon when playing
+            if (isPlaying)
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.35),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.all(8),
                   child: const Icon(
                     Icons.graphic_eq,
-                    color: AppColors.white,
-                    size: 24,
+                    color: Colors.white,
+                    size: 28,
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -244,11 +256,11 @@ class HotRecommendedCardItem extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 14, // Reduced font size
             fontWeight: FontWeight.w700,
-            color: AppColors.greyDark.withOpacity(isDark ? 0.9 : 1.0),
+            color: _parseColor(radio.textColor),
             height: 1.2,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
           decoration: BoxDecoration(
@@ -262,33 +274,33 @@ class HotRecommendedCardItem extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 10, // Reduced font size
               fontWeight: FontWeight.w500,
-              color: AppColors.greyDark.withOpacity(isDark ? 0.8 : 1.0),
+              color: _parseColor(radio.textColor),
             ),
           ),
         ),
-        const SizedBox(height: 2),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Ionicons.location,
-              size: 12,
-              color: AppColors.greyDark.withOpacity(0.7),
-            ),
-            const SizedBox(width: 2),
-            Flexible(
-              child: Text(
-                radio.country,
-                style: GoogleFonts.poppins(
-                  fontSize: 10, // Reduced font size
-                  color: AppColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
+        // const SizedBox(height: 2),
+        // Row(
+        //   mainAxisAlignment: MainAxisAlignment.center,
+        //   children: [
+        //     Icon(
+        //       Ionicons.location,
+        //       size: 12,
+        //       color: AppColors.greyDark.withOpacity(0.7),
+        //     ),
+        // const SizedBox(width: 2),
+        // Flexible(
+        //   child: Text(
+        //     radio.country,
+        //     style: GoogleFonts.poppins(
+        //       fontSize: 10, // Reduced font size
+        //       color: _parseColor(radio.textColor),
+        //     ),
+        //     maxLines: 1,
+        //     overflow: TextOverflow.ellipsis,
+        //   ),
+        // ),
+        //   ],
+        // ),
       ],
     );
   }

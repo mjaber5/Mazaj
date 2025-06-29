@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
+import 'package:mazaj_radio/core/util/constant/sizes.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
@@ -30,7 +31,7 @@ class FavoriteCardItem extends StatelessWidget {
             state.currentRadio?.id == radioItem.id && state.isLoading;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 6),
           child: Container(
             decoration: BoxDecoration(
               color: Color(
@@ -66,7 +67,7 @@ class FavoriteCardItem extends StatelessWidget {
                         ),
                   ),
                 ),
-                const SizedBox(width: 15),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,7 +77,7 @@ class FavoriteCardItem extends StatelessWidget {
                         style: const TextStyle(
                           color: AppColors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: AppTextSizes.fontSizeMd,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -86,7 +87,7 @@ class FavoriteCardItem extends StatelessWidget {
                         '${radio.genres} • ${radio.country}',
                         style: const TextStyle(
                           color: AppColors.white,
-                          fontSize: 13,
+                          fontSize: AppTextSizes.fontSizeSm,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

@@ -26,7 +26,7 @@ class MiniPlayer extends StatelessWidget {
           child: Container(
             width:
                 MediaQuery.of(context).size.width *
-                0.86, // 16px padding on each side
+                0.85, // 16px padding on each side
             decoration: BoxDecoration(
               color: isDark ? AppColors.greyDark : AppColors.greyLight,
               borderRadius: BorderRadius.circular(20),
@@ -190,8 +190,8 @@ class MiniPlayer extends StatelessWidget {
   /// Builds the close button to stop the radio and hide the mini player.
   Widget _buildCloseButton(BuildContext context, bool isDark) {
     return Container(
-      width: 32,
-      height: 32,
+      width: 30,
+      height: 30,
       decoration: BoxDecoration(
         color:
             isDark

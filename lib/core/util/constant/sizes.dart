@@ -15,12 +15,12 @@ class AppTextSizes {
   static const double iconXl = 40.0; // Added for larger icons
 
   // Font Sizes (aligned with professional typography)
-  static const double fontSizeXs = 12.0;
-  static const double fontSizeSm = 14.0;
-  static const double fontSizeMd = 16.0;
-  static const double fontSizeLg = 18.0;
-  static const double fontSizeXl = 22.0; // Added for headlines
-  static const double fontSizeXxl = 28.0; // Added for large titles
+  static const double fontSizeXs = 10.0;
+  static const double fontSizeSm = 12.0;
+  static const double fontSizeMd = 14.0;
+  static const double fontSizeLg = 16.0;
+  static const double fontSizeXl = 20.0; // Added for headlines
+  static const double fontSizeXxl = 26.0; // Added for large titles
 
   // Button Sizes (increased for better tap targets)
   static const double buttonHeight = 48.0; // Standard height for accessibility

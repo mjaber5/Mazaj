@@ -25,15 +25,15 @@ class HomeViewBody extends StatelessWidget {
               padding: const EdgeInsetsDirectional.only(
                 start: 0,
                 end: 0,
-                top: 16,
+                top: 14,
               ),
               children: [
                 CustomAppBar(isDark: isDark, title: 'Home'),
                 buildGreetingHeader(context),
-                const SizedBox(height: 20),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.009),
                 const TitleSection(),
                 const HotRecommendedCardItem(),
-                const SizedBox(height: 20),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.009),
                 const RecentlyPlayedSection(),
                 Consumer<RadioProvider>(
                   builder: (context, provider, child) {

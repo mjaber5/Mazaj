@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:mazaj_radio/core/util/constant/colors.dart';
+import 'package:mazaj_radio/core/util/constant/sizes.dart';
 import 'package:mazaj_radio/core/util/widget/audio_player_cubit.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 import 'package:mazaj_radio/feature/collections/data/model/radio_item.dart';
@@ -266,8 +267,8 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
         Text(
           widget.radio.name,
           style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontSize: AppTextSizes.fontSizeMd,
+            fontWeight: FontWeight.w600,
             color:
                 isCurrentRadio
                     ? AppColors.accentColor
@@ -283,10 +284,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
           children: [
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
                   color: (isDark ? Colors.white : Colors.black).withOpacity(
                     0.1,
@@ -296,8 +294,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                 child: Text(
                   widget.radio.genres,
                   style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                    fontSize: AppTextSizes.fontSizeXs,
                     color:
                         isDark
                             ? AppColors.textOnPrimary
@@ -311,7 +308,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
             const SizedBox(width: 8),
             Icon(
               Ionicons.location,
-              size: 12,
+              size: AppTextSizes.iconXs,
               color: isDark ? AppColors.textOnPrimary : AppColors.textPrimary,
             ),
             const SizedBox(width: 2),
@@ -319,7 +316,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
               child: Text(
                 widget.radio.country,
                 style: GoogleFonts.poppins(
-                  fontSize: 11,
+                  fontSize: AppTextSizes.fontSizeXs,
                   color:
                       isDark ? AppColors.textOnPrimary : AppColors.textPrimary,
                 ),
@@ -341,7 +338,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
               children: [
                 Icon(
                   CupertinoIcons.clock,
-                  size: 13,
+                  size: AppTextSizes.iconXs,
                   color:
                       isDark ? AppColors.textOnPrimary : AppColors.textPrimary,
                 ),
@@ -350,7 +347,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                   child: Text(
                     'Last played: $lastPlayed',
                     style: GoogleFonts.poppins(
-                      fontSize: 10,
+                      fontSize: AppTextSizes.fontSizeXs,
                       color:
                           isDark
                               ? AppColors.textOnPrimary

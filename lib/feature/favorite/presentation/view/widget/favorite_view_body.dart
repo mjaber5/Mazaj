@@ -19,7 +19,7 @@ class FavoriteViewBody extends StatelessWidget {
         child: Column(
           children: [
             CustomAppBar(isDark: isDark, title: 'Favorite'),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.045),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.029),
             Expanded(
               child: Consumer<RadioProvider>(
                 builder: (context, provider, child) {
