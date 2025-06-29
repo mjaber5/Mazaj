@@ -46,9 +46,16 @@
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
     <!-- Enable Background Audio -->
-    <key>UIBackgroundModes</key>
+   <key>UIBackgroundModes</key>
     <array>
         <string>audio</string>
+        <string>fetch</string>
     </array>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>We need access to the microphone to improve your audio experience.</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>We need access to Bluetooth to connect to audio devices.</string>
+    <key>Privacy - Microphone Usage Description</key>
+    <string>This app uses the microphone for audio playback control.</string>
 </dict>
 </plist>

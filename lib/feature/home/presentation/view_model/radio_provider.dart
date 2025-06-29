@@ -115,24 +115,18 @@ class RadioProvider with ChangeNotifier {
   }
 
   RadioStation? getNextStation(String currentRadioId) {
-    if (_recentlyPlayed.isEmpty && _allStations.isEmpty) return null;
     final stations =
         _recentlyPlayed.isNotEmpty ? _recentlyPlayed : _allStations;
     final currentIndex = stations.indexWhere((r) => r.id == currentRadioId);
-    if (currentIndex == -1 || currentIndex == stations.length - 1) {
-      return stations.isNotEmpty ? stations[0] : null;
-    }
-    return stations[currentIndex + 1];
+    return currentIndex != -1 && currentIndex < stations.length - 1
+        ? stations[currentIndex + 1]
+        : stations.firstOrNull;
   }
 
   RadioStation? getPreviousStation(String currentRadioId) {
-    if (_recentlyPlayed.isEmpty && _allStations.isEmpty) return null;
     final stations =
         _recentlyPlayed.isNotEmpty ? _recentlyPlayed : _allStations;
     final currentIndex = stations.indexWhere((r) => r.id == currentRadioId);
-    if (currentIndex <= 0) {
-      return stations.isNotEmpty ? stations[stations.length - 1] : null;
-    }
-    return stations[currentIndex - 1];
+    return currentIndex > 0 ? stations[currentIndex - 1] : stations.lastOrNull;
   }
 }

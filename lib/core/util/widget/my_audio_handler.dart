@@ -42,15 +42,21 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Future<void> _initializeAudioSession() async {
     final session = await AudioSession.instance;
     await session.configure(
-      const AudioSessionConfiguration(
+      AudioSessionConfiguration(
         androidAudioAttributes: AndroidAudioAttributes(
           contentType: AndroidAudioContentType.music,
           usage: AndroidAudioUsage.media,
         ),
         avAudioSessionCategory: AVAudioSessionCategory.playback,
+        avAudioSessionCategoryOptions:
+            AVAudioSessionCategoryOptions.mixWithOthers |
+            AVAudioSessionCategoryOptions.allowBluetooth |
+            AVAudioSessionCategoryOptions.allowAirPlay,
+        avAudioSessionMode: AVAudioSessionMode.defaultMode,
       ),
     );
 
+    // Handle audio interruptions (e.g., phone calls)
     session.interruptionEventStream.listen((event) {
       log(
         'MyAudioHandler: Interruption event - began=${event.begin}, type=${event.type}',
@@ -58,12 +64,23 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       if (event.begin) {
         pause();
       } else {
-        if (_audioPlayer.playing == false && mediaItem.value != null) {
+        if (event.type == AudioInterruptionType.duck &&
+            !_audioPlayer.playing &&
+            mediaItem.value != null) {
           play();
         }
       }
     });
 
+    // Handle route changes (e.g., headphones plugged/unplugged)
+    session.becomingNoisyEventStream.listen((_) {
+      log(
+        'MyAudioHandler: Becoming noisy event (e.g., headphones disconnected)',
+      );
+      pause();
+    });
+
+    // Activate the session
     await session.setActive(true);
   }
 
@@ -123,19 +140,26 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Future<void> playRadio(RadioItem radio, BuildContext context) async {
     try {
       log('MyAudioHandler: Setting up radio ${radio.name}');
-      setContext(context); // Store context for RadioProvider access
+      setContext(context);
+
+      // Validate and set logo URL
       final logoUri =
           _validateImageUrl(radio.logo)
               ? Uri.parse(radio.logo)
-              : Uri.parse('asset:///assets/images/splash-screen.png');
+              : Uri.parse('asset://assets/images/default_radio_logo.png');
 
+      // Create MediaItem with rich metadata for iOS
       final mediaItem = MediaItem(
         id: radio.streamUrl,
         title: radio.name,
         artist: radio.genres.isNotEmpty ? radio.genres : 'Radio Station',
         album: radio.country.isNotEmpty ? radio.country : 'Mazaj Radio',
         artUri: logoUri,
-        duration: null,
+        duration: null, // Live streams have no duration
+        displaySubtitle:
+            'Live Radio • ${radio.genres.isNotEmpty ? radio.genres : 'Various'}',
+        displayDescription:
+            'Streaming from ${radio.country.isNotEmpty ? radio.country : 'Mazaj Radio'}',
         extras: {
           'country': radio.country,
           'featured': radio.featured,
@@ -143,21 +167,39 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
         },
       );
 
+      // Update MediaItem and queue
       this.mediaItem.add(mediaItem);
       queue.add([mediaItem]);
       log(
         'MyAudioHandler: MediaItem set - ${mediaItem.title}, artUri=${mediaItem.artUri}',
       );
 
+      // Set loading state
       playbackState.add(
         playbackState.value.copyWith(
           processingState: AudioProcessingState.loading,
           playing: false,
           controls: [
-            MediaControl.skipToPrevious,
-            MediaControl.play,
-            MediaControl.skipToNext,
-            MediaControl.stop,
+            MediaControl(
+              androidIcon: 'drawable/ic_previous',
+              label: 'Previous',
+              action: MediaAction.skipToPrevious,
+            ),
+            MediaControl(
+              androidIcon: 'drawable/ic_play',
+              label: 'Play',
+              action: MediaAction.play,
+            ),
+            MediaControl(
+              androidIcon: 'drawable/ic_next',
+              label: 'Next',
+              action: MediaAction.skipToNext,
+            ),
+            MediaControl(
+              androidIcon: 'drawable/ic_stop',
+              label: 'Stop',
+              action: MediaAction.stop,
+            ),
           ],
           systemActions: const {
             MediaAction.play,
@@ -169,11 +211,9 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
           androidCompactActionIndices: const [0, 1, 2],
         ),
       );
-      log('MyAudioHandler: Loading state set for ${radio.name}');
 
+      // Set audio source and play
       await _audioPlayer.setAudioSource(_createAudioSource(mediaItem));
-      log('MyAudioHandler: Audio source set for ${radio.name}');
-
       await _audioPlayer.play();
       log('MyAudioHandler: Playing radio ${radio.name}');
 
@@ -199,15 +239,32 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
         ).setLastPlayedTime(radio.id);
       }
 
+      // Set playing state
       playbackState.add(
         playbackState.value.copyWith(
           processingState: AudioProcessingState.ready,
           playing: true,
           controls: [
-            MediaControl.skipToPrevious,
-            MediaControl.pause,
-            MediaControl.skipToNext,
-            MediaControl.stop,
+            MediaControl(
+              androidIcon: 'drawable/ic_previous',
+              label: 'Previous',
+              action: MediaAction.skipToPrevious,
+            ),
+            MediaControl(
+              androidIcon: 'drawable/ic_pause',
+              label: 'Pause',
+              action: MediaAction.pause,
+            ),
+            MediaControl(
+              androidIcon: 'drawable/ic_next',
+              label: 'Next',
+              action: MediaAction.skipToNext,
+            ),
+            MediaControl(
+              androidIcon: 'drawable/ic_stop',
+              label: 'Stop',
+              action: MediaAction.stop,
+            ),
           ],
           systemActions: const {
             MediaAction.play,
@@ -226,6 +283,35 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
           processingState: AudioProcessingState.error,
           playing: false,
           errorMessage: 'Failed to play ${radio.name}',
+          controls: [
+            MediaControl(
+              androidIcon: 'drawable/ic_previous',
+              label: 'Previous',
+              action: MediaAction.skipToPrevious,
+            ),
+            MediaControl(
+              androidIcon: 'drawable/ic_play',
+              label: 'Retry',
+              action: MediaAction.play,
+            ),
+            MediaControl(
+              androidIcon: 'drawable/ic_next',
+              label: 'Next',
+              action: MediaAction.skipToNext,
+            ),
+            MediaControl(
+              androidIcon: 'drawable/ic_stop',
+              label: 'Stop',
+              action: MediaAction.stop,
+            ),
+          ],
+          systemActions: const {
+            MediaAction.play,
+            MediaAction.stop,
+            MediaAction.skipToNext,
+            MediaAction.skipToPrevious,
+          },
+          androidCompactActionIndices: const [0, 1, 2],
         ),
       );
       rethrow;

@@ -25,22 +25,19 @@ void main() async {
   try {
     audioHandler = await AudioService.init(
       builder: () => MyAudioHandler(),
-      config: AudioServiceConfig(
+      config: const AudioServiceConfig(
         androidNotificationChannelId: 'com.mazaj.radio.audio',
         androidNotificationChannelName: 'Mazaj Radio Playback',
         androidNotificationChannelDescription: 'Control Mazaj Radio playback',
         androidNotificationOngoing: true,
         androidNotificationClickStartsActivity: true,
         androidStopForegroundOnPause: true,
-        androidNotificationIcon:
-            'mipmap/ic_notification', // Custom notification icon
-        androidShowNotificationBadge: true,
-        notificationColor: AppColors.accentColor, // Branded color
+        notificationColor:
+            AppColors
+                .accentColor, // Example color, use AppColors.accentColor.value
         preloadArtwork: true,
-        artDownscaleWidth: 128, // Higher quality images
+        artDownscaleWidth: 128,
         artDownscaleHeight: 128,
-        fastForwardInterval: Duration(seconds: 10),
-        rewindInterval: Duration(seconds: 10),
       ),
     );
     debugPrint('AudioService initialized successfully');
