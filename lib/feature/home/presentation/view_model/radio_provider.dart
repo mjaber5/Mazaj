@@ -1,20 +1,25 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:mazaj_radio/core/services/api_srvices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mazaj_radio/feature/home/data/model/radio_station.dart';
 
 class RadioProvider with ChangeNotifier {
   List<RadioStation> _recentlyPlayed = [];
   List<RadioStation> _favorites = [];
+  List<RadioStation> _allStations = [];
   static const String _recentKey = 'recently_played_radios';
   static const String _favoriteKey = 'favorite_radios';
+  final ApiService _apiService = ApiService();
 
   List<RadioStation> get recentlyPlayed => _recentlyPlayed;
   List<RadioStation> get favorites => _favorites;
+  List<RadioStation> get allStations => _allStations;
 
   RadioProvider() {
     _loadRecentlyPlayed();
     _loadFavorites();
+    _loadAllStations();
   }
 
   Future<void> _loadRecentlyPlayed() async {
@@ -39,12 +44,21 @@ class RadioProvider with ChangeNotifier {
     }
   }
 
+  Future<void> _loadAllStations() async {
+    try {
+      _allStations = await _apiService.fetchRadios();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('RadioProvider: Error loading all stations: $e');
+    }
+  }
+
   Future<void> addRecentlyPlayed(RadioStation radio) async {
     final prefs = await SharedPreferences.getInstance();
-    _recentlyPlayed.removeWhere((r) => r.id == radio.id); // Remove duplicates
-    _recentlyPlayed.insert(0, radio); // Add to start
+    _recentlyPlayed.removeWhere((r) => r.id == radio.id);
+    _recentlyPlayed.insert(0, radio);
     if (_recentlyPlayed.length > 4) {
-      _recentlyPlayed = _recentlyPlayed.take(4).toList(); // Limit to 4
+      _recentlyPlayed = _recentlyPlayed.take(4).toList();
     }
     final radiosJson = jsonEncode(
       _recentlyPlayed.map((r) => r.toJson()).toList(),
@@ -55,7 +69,7 @@ class RadioProvider with ChangeNotifier {
 
   Future<void> addFavorite(RadioStation radio) async {
     final prefs = await SharedPreferences.getInstance();
-    _favorites.removeWhere((r) => r.id == radio.id); // Remove duplicates
+    _favorites.removeWhere((r) => r.id == radio.id);
     _favorites.add(radio);
     final favoritesJson = jsonEncode(
       _favorites.map((r) => r.toJson()).toList(),
@@ -98,5 +112,27 @@ class RadioProvider with ChangeNotifier {
       DateTime.now().toIso8601String(),
     );
     notifyListeners();
+  }
+
+  RadioStation? getNextStation(String currentRadioId) {
+    if (_recentlyPlayed.isEmpty && _allStations.isEmpty) return null;
+    final stations =
+        _recentlyPlayed.isNotEmpty ? _recentlyPlayed : _allStations;
+    final currentIndex = stations.indexWhere((r) => r.id == currentRadioId);
+    if (currentIndex == -1 || currentIndex == stations.length - 1) {
+      return stations.isNotEmpty ? stations[0] : null;
+    }
+    return stations[currentIndex + 1];
+  }
+
+  RadioStation? getPreviousStation(String currentRadioId) {
+    if (_recentlyPlayed.isEmpty && _allStations.isEmpty) return null;
+    final stations =
+        _recentlyPlayed.isNotEmpty ? _recentlyPlayed : _allStations;
+    final currentIndex = stations.indexWhere((r) => r.id == currentRadioId);
+    if (currentIndex <= 0) {
+      return stations.isNotEmpty ? stations[stations.length - 1] : null;
+    }
+    return stations[currentIndex - 1];
   }
 }

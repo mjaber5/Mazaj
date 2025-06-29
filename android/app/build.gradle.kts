@@ -22,7 +22,7 @@ android {
     defaultConfig {
         applicationId = "com.mazaj.radio"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

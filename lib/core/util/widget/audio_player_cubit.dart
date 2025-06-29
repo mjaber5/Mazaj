@@ -85,7 +85,7 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
       }
 
       emit(state.copyWith(isLoading: true, currentRadio: radio));
-      await _audioHandler.playRadio(radio);
+      await _audioHandler.playRadio(radio, context);
       if (!context.mounted) return;
       try {
         final radioStation = RadioStation(
