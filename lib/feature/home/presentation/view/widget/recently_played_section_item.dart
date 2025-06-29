@@ -101,7 +101,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                     transform:
                         Matrix4.identity()..scale(_isPressed ? 0.98 : 1.0),
                     margin: const EdgeInsets.symmetric(
-                      horizontal: 2,
+                      horizontal: 0,
                       vertical: 6,
                     ),
                     padding: const EdgeInsets.symmetric(

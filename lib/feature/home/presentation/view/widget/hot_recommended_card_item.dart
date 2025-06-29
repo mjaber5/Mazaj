@@ -24,7 +24,7 @@ class HotRecommendedCardItem extends StatelessWidget {
     return SizedBox(
       height:
           MediaQuery.of(context).size.height *
-          0.32, // Increased height to accommodate content
+          0.35, // Increased height to accommodate content
       child: FutureBuilder<List<RadioStation>>(
         future: apiService.fetchRadios(featured: true),
         builder: (context, snapshot) {
@@ -78,7 +78,7 @@ class HotRecommendedCardItem extends StatelessWidget {
         return AnimatedContainer(
           duration: Duration(milliseconds: 300 + (index * 90)),
           curve: Curves.easeOutBack,
-          width: MediaQuery.of(context).size.width * 0.52,
+          width: MediaQuery.of(context).size.width * 0.55,
           margin: const EdgeInsets.only(right: 10, top: 8, bottom: 8),
           child: GestureDetector(
             onTap:
@@ -139,21 +139,16 @@ class HotRecommendedCardItem extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.001,
-                ), // Reduced space
+                // Reduced space
                 _buildRadioImage(radio, isPlaying),
                 SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.011,
+                  height: MediaQuery.of(context).size.height * 0.005,
                 ), // Reduced space
                 _buildRadioInfo(radio, isDark),
                 SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.011,
+                  height: MediaQuery.of(context).size.height * 0.005,
                 ), // Reduced space
                 _buildPlayControls(isPlaying, isLoading),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.0012,
-                ), // Reduced space
               ],
             ),
           ),
@@ -189,8 +184,8 @@ class HotRecommendedCardItem extends StatelessWidget {
               CachedNetworkImage(
                 imageUrl: radio.logo,
                 fit: BoxFit.cover,
-                width: 100,
-                height: 100,
+                width: 110,
+                height: 110,
                 placeholder:
                     (_, __) => Container(
                       decoration: BoxDecoration(
@@ -299,7 +294,7 @@ class HotRecommendedCardItem extends StatelessWidget {
   Widget _buildPlayControls(bool isPlaying, bool isLoading) {
     return Container(
       width: double.infinity,
-      height: 48, // Slightly reduced height
+      height: 44, // Slightly reduced height
       decoration: BoxDecoration(
         color: AppColors.greyDark.withOpacity(0.15),
         borderRadius: BorderRadius.circular(25),
