@@ -59,14 +59,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
-        </receiver>
-
-        <meta-data
-        android:name="com.google.firebase.messaging.default_notification_icon"
-        android:resource="@drawable/ic_stat_name"/>
-
-        
-        
+        </receiver>        
         <!-- Removed Firebase notification channel metadata to avoid conflict -->
         <meta-data
             android:name="flutterEmbedding"
