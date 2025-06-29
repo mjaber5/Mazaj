@@ -52,7 +52,6 @@ class HomeViewBody extends StatelessWidget {
                         ),
                       );
                     }
-
                     return Column(
                       children:
                           radios
@@ -68,7 +67,7 @@ class HomeViewBody extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 80),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.1),
               ],
             ),
           ),

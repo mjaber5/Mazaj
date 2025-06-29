@@ -99,10 +99,13 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                     transform:
                         Matrix4.identity()..scale(_isPressed ? 0.98 : 1.0),
                     margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
+                      horizontal: 2,
                       vertical: 6,
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: _getBackgroundColor(isDark, isCurrentRadio),
                       borderRadius: BorderRadius.circular(20),
@@ -118,7 +121,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                           color:
                               isCurrentRadio
                                   ? AppColors.accentColor.withOpacity(0.2)
-                                  : Colors.black.withOpacity(
+                                  : AppColors.black.withOpacity(
                                     isDark ? 0.3 : 0.1,
                                   ),
                           blurRadius: isCurrentRadio ? 15 : 8,
@@ -163,8 +166,8 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
           : AppColors.accentColor.withOpacity(0.05);
     }
     return isDark
-        ? Colors.grey.shade900.withOpacity(0.6)
-        : Colors.white.withOpacity(0.9);
+        ? AppColors.greyLight.withOpacity(0.6)
+        : AppColors.white.withOpacity(0.9);
   }
 
   Widget _buildRadioImage(bool isDark, bool isPlaying) {
@@ -172,18 +175,9 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
       tag: 'recently_played_${widget.radio.id}',
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        width: 70,
-        height: 70,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+        width: 55,
+        height: 55,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(18)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Stack(
@@ -196,7 +190,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                 placeholder:
                     (context, url) => Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.3),
+                        color: Colors.transparent,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Center(
@@ -206,7 +200,7 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                 errorWidget:
                     (context, url, error) => Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.3),
+                        color: AppColors.greyLight.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(
@@ -221,13 +215,13 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
+                    color: AppColors.black.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.graphic_eq,
-                      color: Colors.white,
+                      color: AppColors.white,
                       size: 24,
                     ),
                   ),
@@ -242,14 +236,6 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(16),
                       bottomRight: Radius.circular(16),
-                    ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.3),
-                      ],
                     ),
                   ),
                 ),
@@ -376,8 +362,8 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
   ) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      width: 56,
-      height: 56,
+      width: 55,
+      height: 55,
       decoration: BoxDecoration(
         color: AppColors.accentColor.withOpacity(isPlaying ? 1.0 : 0.1),
         borderRadius: BorderRadius.circular(16),
@@ -411,14 +397,15 @@ class _RecentlyPlayedSectionItemState extends State<RecentlyPlayedSectionItem>
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isPlaying ? Colors.white : AppColors.accentColor,
+                          isPlaying ? AppColors.white : AppColors.accentColor,
                         ),
                       ),
                     )
                     : Icon(
                       isPlaying ? Icons.pause : Icons.play_arrow,
                       size: 28,
-                      color: isPlaying ? Colors.white : AppColors.accentColor,
+                      color:
+                          isPlaying ? AppColors.white : AppColors.accentColor,
                     ),
           ),
         ),
